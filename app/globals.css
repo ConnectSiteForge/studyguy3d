@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+:root {
+  --navy:     #050d1a;
+  --deep:     #0a1628;
+  --electric: #00c896;
+  --white:    #f4f7ff;
+  --off:      #a8b8d0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--navy);
+  color: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+a { color: inherit; text-decoration: none; }
