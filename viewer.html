@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study guide — StudyGuy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <!-- DOMPurify: sanitises AI-generated HTML before rendering to prevent XSS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.4/purify.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- KaTeX: renders LaTeX math formulas ($...$ and $$...$$) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --navy:     #050d1a;
+      --deep:     #0a1628;
+      --electric: #00c896;
+      --electric-dim: rgba(0,200,150,0.12);
+      --white:    #f4f7ff;
+      --off:      #a8b8d0;
+      --success:  #2ecc71;
+      --danger:   #e74c3c;
+      --radius:   12px;
+      --transition: 0.22s ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: var(--navy);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+    radial-gradient(ellipse 80% 60% at 5% -10%, rgba(0,200,150,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 95% 110%, rgba(0,200,150,0.05) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.04; pointer-events: none; z-index: 0;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fadeUp { animation: fadeUp 0.5s ease both; }
+
+    /* Nav */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(10px);
+      background: rgba(5,13,26,0.85);
+      border-bottom: 1px solid rgba(0,200,150,0.1);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; padding: 0 1.25rem;
+      max-width: 900px; margin: 0 auto;
+    }
+    .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.1em; color: var(--electric); }
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; }
+    .nav-back { font-size: 0.85rem; color: var(--off); transition: color var(--transition); }
+    .nav-back:hover { color: var(--white); }
+    .btn-print {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.82rem; color: var(--off);
+      background: rgba(0,200,150,0.08);
+      border: 1px solid rgba(0,200,150,0.2);
+      padding: 0.4rem 0.9rem; border-radius: 8px;
+      cursor: pointer; transition: color var(--transition), border-color var(--transition);
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-print:hover { color: var(--white); border-color: var(--electric); }
+
+    /* Page */
+    .page { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.25rem; position: relative; z-index: 1; }
+
+    /* Meta bar */
+    .guide-meta-bar {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,150,0.15);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
+      margin-bottom: 2rem;
+    }
+    .guide-title-heading {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem; letter-spacing: 0.08em;
+      flex: 1; min-width: 0;
+      line-height: 1.1;
+    }
+    .guide-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+    .mode-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem; letter-spacing: 0.05em;
+      padding: 0.2rem 0.7rem; border-radius: 100px;
+      text-transform: uppercase;
+    }
+    .mode-badge.study_guide  { background: rgba(0,200,150,0.15); border: 1px solid rgba(0,200,150,0.3); color: #7ab0ee; }
+    .mode-badge.problem_solver { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.25); color: #5de896; }
+    .mode-badge.hybrid       { background: rgba(224,155,46,0.1); border: 1px solid rgba(224,155,46,0.25); color: #e8c06f; }
+    .guide-meta-info {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem; color: var(--off);
+    }
+
+    /* Loading */
+    .loading-state { text-align: center; padding: 5rem 1rem; }
+    .loading-spinner {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(0,200,150,0.2);
+      border-top-color: var(--electric);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1.5rem;
+    }
+    .loading-text { color: var(--off); font-size: 0.9rem; font-weight: 300; }
+
+    /* Error / not found */
+    .error-state { text-align: center; padding: 4rem 1rem; }
+    .error-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .error-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+    .error-sub { color: var(--off); font-size: 0.9rem; font-weight: 300; margin-bottom: 2rem; }
+    .btn-primary {
+      display: inline-flex; align-items: center;
+      background: var(--electric); color: var(--white);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem; letter-spacing: 0.1em;
+      padding: 0.7rem 1.5rem; border-radius: var(--radius);
+      border: none; cursor: pointer;
+      transition: background var(--transition);
+    }
+    .btn-primary:hover { background: #009e78; }
+
+    /* Guide content styling */
+    .guide-wrapper {
+      background: #ffffff;
+      border: 1px solid rgba(0,200,150,0.25);
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      position: relative; overflow: hidden;
+    }
+    .guide-wrapper::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--electric), rgba(0,200,150,0.2));
+    }
+
+    /* ── Guide content typography ─────────────────────────── */
+    .guide-content { color: #1a1a2e; line-height: 1.75; }
+
+    .guide-content h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem; letter-spacing: 0.08em;
+      color: #1a4fa0;
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #dde8f5;
+    }
+    .guide-content h2:first-child { margin-top: 0; }
+
+    .guide-content h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem; letter-spacing: 0.06em;
+      color: #1a1a2e;
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    .guide-content p { margin-bottom: 0.85rem; font-size: 0.97rem; font-weight: 300; }
+
+    .guide-content ul, .guide-content ol {
+      margin: 0.75rem 0 0.75rem 1.5rem;
+      display: flex; flex-direction: column; gap: 0.4rem;
+    }
+    .guide-content li { font-size: 0.95rem; font-weight: 300; }
+
+    .guide-content strong { font-weight: 600; color: #1a1a2e; }
+    .guide-content em { font-style: italic; color: #555; }
+    .guide-content code {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.82rem;
+      background: #f0f4ff;
+      border: 1px solid #dde8f5;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      color: #1a4fa0;
+    }
+
+    /* Sections */
+    .guide-content .guide-section {
+      margin-bottom: 2rem;
+    }
+
+    /* Definition box */
+    .guide-content .definition-box {
+      background: #f0f5ff;
+      border: 1px solid #c5d8f5;
+      border-left: 3px solid #3a7bd5;
+      border-radius: 0 8px 8px 0;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+    }
+    .guide-content .definition-box strong {
+      display: block; margin-bottom: 0.3rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem; color: #3a7bd5;
+      letter-spacing: 0.04em;
+    }
+    .guide-content .definition-box p { margin: 0; font-size: 0.92rem; }
+
+    /* Tip / key point box */
+    .guide-content .tip-box {
+      background: #f0fff4;
+      border: 1px solid #b3e8ce;
+      border-left: 3px solid #2ecc71;
+      border-radius: 0 8px 8px 0;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+    }
+    .guide-content .tip-box::before {
+      content: '💡 Key point';
+      display: block; margin-bottom: 0.4rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.06em;
+      color: var(--success);
+    }
+    .guide-content .tip-box p { margin: 0; font-size: 0.92rem; }
+
+    /* Problem / practice box */
+    .guide-content .problem-box {
+      background: rgba(224,155,46,0.06);
+      border: 1px solid rgba(224,155,46,0.2);
+      border-left: 3px solid #e09b2e;
+      border-radius: 0 8px 8px 0;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+    }
+    .guide-content .problem-box::before {
+      content: '🔬 Practice problem';
+      display: block; margin-bottom: 0.4rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.06em;
+      color: #e09b2e;
+    }
+    .guide-content .problem-box p { margin: 0; font-size: 0.92rem; }
+
+    /* Flashcard Q&A box */
+    .guide-content .flashcard-box {
+      background: rgba(224,155,46,0.05);
+      border: 1px solid rgba(224,155,46,0.2);
+      border-left: 3px solid #e09b2e;
+      border-radius: 0 8px 8px 0;
+      padding: 1rem 1.25rem;
+      margin: 0.75rem 0;
+    }
+    .guide-content .flashcard-box::before {
+      content: '🃏 Flashcard';
+      display: block; margin-bottom: 0.4rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.06em;
+      color: #e09b2e;
+    }
+    .guide-content .flashcard-box strong {
+      display: block; margin-bottom: 0.4rem;
+      font-size: 0.92rem; color: #1a1a2e;
+    }
+    .guide-content .flashcard-box p { margin: 0; font-size: 0.92rem; color: #555; }
+
+    /* Worked solution box (problem_solver / hybrid) */
+    .guide-content .worked-solution-box {
+      background: rgba(46,204,113,0.06);
+      border: 1px solid rgba(46,204,113,0.2);
+      border-left: 3px solid var(--success);
+      border-radius: 0 8px 8px 0;
+      padding: 1rem 1.25rem;
+      margin: 0.75rem 0;
+    }
+    .guide-content .worked-solution-box::before {
+      content: '📝 Worked solution';
+      display: block; margin-bottom: 0.5rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.06em;
+      color: var(--success);
+    }
+    .guide-content .worked-solution-box ol {
+      margin-left: 1.25rem;
+      display: flex; flex-direction: column; gap: 0.5rem;
+    }
+    .guide-content .worked-solution-box li {
+      font-size: 0.92rem; font-weight: 300; line-height: 1.65;
+    }
+    .guide-content .worked-solution-box p { margin: 0.25rem 0; font-size: 0.92rem; }
+
+    /* Final answer box */
+    .guide-content .answer-box {
+      background: rgba(0,200,150,0.1);
+      border: 2px solid rgba(0,200,150,0.35);
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      margin: 0.75rem 0;
+      text-align: center;
+    }
+    .guide-content .answer-box::before {
+      content: '✓ Final answer';
+      display: block; margin-bottom: 0.3rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.06em;
+      color: #3a7bd5;
+    }
+    .guide-content .answer-box strong {
+      font-size: 1.05rem; color: #1a1a2e;
+    }
+    .guide-content .answer-box p { margin: 0; font-size: 0.95rem; }
+
+    /* Formula display */
+    .guide-content .formula {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.9rem;
+      background: rgba(0,200,150,0.08);
+      border: 1px solid rgba(0,200,150,0.2);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      text-align: center;
+      margin: 0.75rem 0;
+      color: #a8d0ff;
+    }
+
+    /* Answer reveal button */
+    .reveal-btn {
+      display: inline-block;
+      margin: 0.4rem 0 0.25rem;
+      padding: 0.3rem 0.85rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      color: var(--electric);
+      background: var(--electric-dim);
+      border: 1px solid rgba(0,200,150,0.3);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .reveal-btn:hover { background: rgba(0,200,150,0.2); border-color: var(--electric); }
+    @media print { .reveal-btn { display: none; } }
+
+    /* Print styles */
+    @media print {
+      body::before, body::after { display: none; }
+      .nav, .guide-meta-bar .guide-badges { display: none; }
+      body { background: white; color: black; }
+      .guide-wrapper { border: none; padding: 0; }
+      .guide-wrapper::before { display: none; }
+      .guide-content h2 { color: #1a4fa0; border-color: #dde8f5; }
+      .guide-content .definition-box { background: #f0f5ff; border-color: #c5d8f5; }
+      .guide-content .tip-box { background: #f0faf5; border-color: #b3e8ce; }
+      .guide-content .problem-box { background: #fffaf0; border-color: #ffe4b0; }
+      .guide-content .worked-solution-box { background: #f0faf5; border-color: #b3e8ce; }
+      .guide-content .answer-box { background: #f0f5ff; border: 2px solid #c5d8f5; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">StudyGuy</a>
+      <div class="nav-right">
+        <button class="btn-print" onclick="window.print()">🖨️ Print</button>
+        <a href="account.html" class="nav-back">← Dashboard</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="page">
+
+    <!-- Loading state -->
+    <div id="stateLoading" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Loading your study guide…</p>
+    </div>
+
+    <!-- Error state -->
+    <div id="stateError" class="error-state" style="display:none;">
+      <div class="error-icon">📭</div>
+      <div class="error-title">Guide not found</div>
+      <p class="error-sub" id="errorMsg">This study guide doesn't exist or you don't have access to it.</p>
+      <a href="account.html" class="btn-primary">Back to dashboard</a>
+    </div>
+
+    <!-- Content state -->
+    <div id="stateContent" style="display:none;">
+
+      <!-- Meta bar -->
+      <div class="guide-meta-bar fadeUp">
+        <div class="guide-title-heading" id="guideTitle">Untitled guide</div>
+        <div class="guide-badges">
+          <span class="mode-badge" id="modeBadge">Study guide</span>
+          <span class="guide-meta-info" id="guideDate"></span>
+        </div>
+      </div>
+
+      <!-- Guide content -->
+      <div class="guide-wrapper fadeUp">
+        <div class="guide-content" id="guideContent"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    let sb = null;
+    try {
+      sb = window.supabase.createClient(window.SF.SUPABASE_URL, window.SF.SUPABASE_KEY);
+    } catch(e) {
+      showError('Could not connect to the service. Please refresh the page.');
+    }
+
+    function formatDate(iso) {
+      return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    function formatNum(n) {
+      if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+      return String(n);
+    }
+
+    var modeLabels  = { study_guide: 'Study guide', problem_solver: 'Problem solver', hybrid: 'Hybrid' };
+    var guideRecord = null;   // populated after guide loads — used by export functions
+    var viewerSess  = null;   // current session — used by export functions
+
+    // Global functions referenced by onclick in AI-generated guide content
+    function toggleExamMode() {
+      var exam = document.getElementById('exam-mode');
+      if (!exam) return;
+      var opening = exam.style.display === 'none' || exam.style.display === '';
+      exam.style.display = opening ? 'block' : 'none';
+      var btn = document.querySelector('button[onclick="toggleExamMode()"]');
+      if (btn) btn.textContent = opening ? 'Stop exam mode' : 'Start exam mode';
+    }
+    function showExamAnswers() {
+      document.querySelectorAll('.exam-answer').forEach(function(el) { el.style.display = 'block'; });
+      var btn = document.getElementById('showAnswersBtn');
+      if (btn) btn.style.display = 'none';
+    }
+    function toggleReveal(btn, targetEl) {
+      var hidden = targetEl.style.display === 'none' || targetEl.style.display === '';
+      targetEl.style.display = hidden ? 'block' : 'none';
+      btn.textContent = hidden ? 'Hide answer' : 'Show answer';
+    }
+
+    // Show loading step in the spinner text to aid debugging
+    function setLoadingText(msg) {
+      var el = document.querySelector('.loading-text');
+      if (el) el.textContent = msg;
+      console.log('[viewer]', msg);
+    }
+
+    // Timeout: if still loading after 12s, surface the last known step
+    var _loadingStep = 'Initialising…';
+    var _loadTimeout = setTimeout(function() {
+      showError('Loading timed out at: ' + _loadingStep + ' — open browser console (F12) for details.');
+    }, 12000);
+
+    (async function() {
+      try {
+        _loadingStep = 'Checking connection…';
+        setLoadingText('Checking connection…');
+        if (!sb) { showError('Could not connect — missing config. Try a hard refresh (Ctrl+Shift+R).'); return; }
+
+        _loadingStep = 'Getting session…';
+        setLoadingText('Getting session…');
+        var sessionResult = await sb.auth.getSession();
+        var session = sessionResult.data.session;
+        if (!session) { window.location.href = 'login.html'; return; }
+
+        _loadingStep = 'Checking profile…';
+        setLoadingText('Checking profile…');
+        var ageRes = await sb.from('profiles').select('age_verified').eq('id', session.user.id).maybeSingle();
+        if (ageRes.error) { showError('Profile error: ' + ageRes.error.message); return; }
+        if (!ageRes.data?.age_verified) { window.location.href = 'login.html?blocked=age'; return; }
+        viewerSess = session;
+
+        var params = new URLSearchParams(window.location.search);
+        var id     = params.get('id');
+        if (!id) { showError('No guide ID provided in the URL.'); return; }
+
+        _loadingStep = 'Loading guide…';
+        setLoadingText('Loading guide…');
+
+        // ── localStorage cache ────────────────────────────────────
+        // study_guides.content_html is immutable once written, so cache forever.
+        var CACHE_KEY = 'sg_v1_' + id;
+        var data = null;
+        try {
+          var cached = localStorage.getItem(CACHE_KEY);
+          if (cached) data = JSON.parse(cached);
+        } catch (_) { /* ignore parse/quota errors */ }
+
+        if (!data) {
+          var res = await sb
+            .from('study_guides')
+            .select('id, title, mode, content_html, token_cost, created_at')
+            .eq('id', id)
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+
+          console.log('[viewer] guide query result:', res.error || (res.data ? 'found (' + (res.data.content_html||'').length + ' chars)' : 'null'));
+
+          if (res.error) {
+            showError('Database error: ' + res.error.message + ' (code ' + res.error.code + ')');
+            return;
+          }
+          if (!res.data) {
+            showError("Guide not found or no permission. ID: " + id);
+            return;
+          }
+          data = res.data;
+          // Cache if content is under 500 KB to stay well within localStorage limits
+          try {
+            if ((data.content_html || '').length < 500000) {
+              localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+            }
+          } catch (_) { /* QuotaExceededError — skip caching */ }
+        }
+        guideRecord = data;
+        document.title = (data.title || 'Study guide') + ' — StudyGuy';
+        document.getElementById('guideTitle').textContent = data.title || 'Untitled guide';
+
+        var badge = document.getElementById('modeBadge');
+        badge.textContent = modeLabels[data.mode] || data.mode;
+        badge.className   = 'mode-badge ' + data.mode;
+
+        document.getElementById('guideDate').textContent   = formatDate(data.created_at);
+
+        var html = data.content_html || '<p style="color:var(--off);">This guide has no content yet.</p>';
+        // Strip full HTML document wrapper if Claude returned one
+        if (/^<!DOCTYPE|^<html/i.test(html.trim())) {
+          var bm = html.match(/<body[^>]*>([\s\S]*?)(<\/body>|$)/i);
+          if (bm) html = bm[1].trim();
+        }
+        document.getElementById('guideContent').innerHTML = (typeof DOMPurify !== 'undefined')
+          ? DOMPurify.sanitize(html, { FORCE_BODY: true, ADD_TAGS: ['style'], ADD_ATTR: ['onclick', 'style'] })
+          : html;
+
+        if (window.renderMathInElement) {
+          renderMathInElement(document.getElementById('guideContent'), {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$',  right: '$',  display: false }
+            ],
+            throwOnError: false
+          });
+        }
+
+        // Inject answer-reveal toggles into flashcards and practice questions
+        document.querySelectorAll('.flashcard-box').forEach(function(box) {
+          var answer = box.querySelector('p');
+          if (!answer) return;
+          answer.style.display = 'none';
+          var btn = document.createElement('button');
+          btn.className = 'reveal-btn';
+          btn.textContent = 'Show answer';
+          btn.onclick = function() { toggleReveal(btn, answer); };
+          answer.parentNode.insertBefore(btn, answer);
+        });
+        document.querySelectorAll('.worked-solution-box, .answer-box').forEach(function(box) {
+          box.style.display = 'none';
+          var btn = document.createElement('button');
+          btn.className = 'reveal-btn';
+          btn.textContent = 'Show answer';
+          btn.onclick = function() { toggleReveal(btn, box); };
+          box.parentNode.insertBefore(btn, box);
+        });
+
+        clearTimeout(_loadTimeout);
+        document.getElementById('stateLoading').style.display = 'none';
+        document.getElementById('stateContent').style.display = 'block';
+
+      } catch (err) {
+        clearTimeout(_loadTimeout);
+        var msg = (err && err.message) ? err.message : String(err);
+        console.error('[viewer] caught error at step "' + _loadingStep + '":', err);
+        showError('Failed at "' + _loadingStep + '": ' + msg);
+      }
+    })();
+
+    function showError(msg) {
+      document.getElementById('stateLoading').style.display = 'none';
+      document.getElementById('errorMsg').textContent = msg;
+      document.getElementById('stateError').style.display = 'block';
+    }
+
+  </script>
+</body>
+</html>

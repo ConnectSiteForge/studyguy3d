@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — StudyGuy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy:     #050d1a;
+      --deep:     #0a1628;
+      --electric: #00c896;
+      --electric-dim: rgba(0,200,150,0.12);
+      --white:    #f4f7ff;
+      --off:      #a8b8d0;
+      --success:  #2ecc71;
+      --danger:   #e74c3c;
+      --radius:   12px;
+      --transition: 0.22s ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: var(--navy);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+    radial-gradient(ellipse 80% 60% at 5% -10%, rgba(0,200,150,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 95% 110%, rgba(0,200,150,0.05) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.04;
+      pointer-events: none; z-index: 0;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fadeUp { animation: fadeUp 0.5s ease both; }
+    .fadeUp-1 { animation-delay: 0.08s; }
+    .fadeUp-2 { animation-delay: 0.16s; }
+    .fadeUp-3 { animation-delay: 0.24s; }
+
+    /* Nav */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      background: rgba(5,13,26,0.85);
+      border-bottom: 1px solid rgba(0,200,150,0.1);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; padding: 0 1.25rem;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem; letter-spacing: 0.1em;
+      color: var(--electric);
+    }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .nav-email {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem; color: var(--off);
+      display: none;
+    }
+    .btn-signout {
+      font-size: 0.85rem; color: var(--off);
+      background: none; border: none; cursor: pointer;
+      transition: color var(--transition);
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-signout:hover { color: var(--danger); }
+
+    /* Page */
+    .page { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.25rem; position: relative; z-index: 1; }
+
+    /* Welcome header */
+    .welcome-bar {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .welcome-heading {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem; letter-spacing: 0.08em;
+      line-height: 1;
+    }
+    .welcome-heading span { color: var(--electric); }
+    .welcome-sub { color: var(--off); font-size: 0.9rem; font-weight: 300; margin-top: 0.3rem; }
+    .plan-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.1em;
+      padding: 0.3rem 0.8rem;
+      border-radius: 100px;
+      text-transform: uppercase;
+    }
+    .plan-badge.free {
+      background: rgba(168,184,208,0.1);
+      border: 1px solid rgba(168,184,208,0.25);
+      color: var(--off);
+    }
+    .plan-badge.pro {
+      background: rgba(0,200,150,0.15);
+      border: 1px solid rgba(0,200,150,0.4);
+      color: var(--electric);
+    }
+    .plan-badge.ultra {
+      background: rgba(138,43,226,0.15);
+      border: 1px solid rgba(138,43,226,0.4);
+      color: #c084fc;
+    }
+
+    /* Stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,150,0.15);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+    }
+    .stat-card-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem; letter-spacing: 0.1em;
+      color: var(--off); text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+    .stat-card-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.9rem; letter-spacing: 0.06em;
+      color: var(--white);
+    }
+    .stat-card-sub {
+      font-size: 0.78rem; color: var(--off);
+      font-weight: 300; margin-top: 0.1rem;
+    }
+
+    /* Usage bar */
+    .usage-section {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,150,0.15);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .usage-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .usage-title {
+      font-size: 0.88rem; font-weight: 500;
+    }
+    .usage-numbers {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem; color: var(--off);
+    }
+    .usage-track {
+      height: 6px; background: rgba(0,200,150,0.15);
+      border-radius: 3px; overflow: hidden;
+    }
+    .usage-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--electric), #7fffda);
+      border-radius: 3px;
+      transition: width 0.8s ease;
+    }
+    .usage-fill.warning { background: linear-gradient(90deg, #e09b2e, #e8c06f); }
+    .usage-fill.danger  { background: linear-gradient(90deg, var(--danger), #ff8577); }
+    .usage-sub {
+      font-size: 0.75rem; color: var(--off); margin-top: 0.5rem;
+    }
+    .upgrade-link {
+      color: var(--electric); font-weight: 500;
+      transition: opacity var(--transition);
+    }
+    .upgrade-link:hover { opacity: 0.8; }
+
+    /* Actions */
+    .actions-row {
+      display: flex; gap: 1rem; flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--electric);
+      color: var(--white);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem; letter-spacing: 0.1em;
+      padding: 0.7rem 1.5rem;
+      border-radius: var(--radius);
+      border: none; cursor: pointer;
+      transition: background var(--transition), transform var(--transition);
+    }
+    .btn-primary:hover { background: #009e78; transform: translateY(-1px); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: transparent;
+      color: var(--off);
+      font-size: 0.9rem; font-weight: 500;
+      padding: 0.7rem 1.4rem;
+      border-radius: var(--radius);
+      border: 1px solid rgba(168,184,208,0.2);
+      cursor: pointer;
+      transition: color var(--transition), border-color var(--transition);
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-ghost:hover { color: var(--white); border-color: rgba(0,200,150,0.4); }
+    .btn-danger {
+      display: inline-flex; align-items: center;
+      background: transparent;
+      color: var(--danger);
+      font-size: 0.85rem; font-weight: 500;
+      padding: 0.6rem 1.2rem;
+      border-radius: var(--radius);
+      border: 1px solid rgba(231,76,60,0.35);
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+      font-family: 'DM Sans', sans-serif;
+      white-space: nowrap;
+    }
+    .btn-danger:hover { background: rgba(231,76,60,0.12); }
+    .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Guides list */
+    .section-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem; letter-spacing: 0.08em;
+    }
+    .section-link {
+      font-size: 0.82rem; color: var(--electric);
+      transition: opacity var(--transition);
+    }
+    .section-link:hover { opacity: 0.8; }
+
+    .guides-list {
+      display: flex; flex-direction: column; gap: 0.75rem;
+    }
+    .guide-item {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,150,0.15);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem;
+      transition: border-color var(--transition);
+    }
+    .guide-item:hover { border-color: rgba(0,200,150,0.4); }
+    .guide-meta { flex: 1; min-width: 0; }
+    .guide-title {
+      font-weight: 500; font-size: 0.95rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 0.25rem;
+    }
+    .guide-info {
+      display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+    }
+    .guide-date {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem; color: var(--off);
+    }
+    .mode-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem; letter-spacing: 0.05em;
+      padding: 0.15rem 0.6rem;
+      border-radius: 100px;
+      text-transform: uppercase;
+    }
+    .mode-badge.study_guide  { background: rgba(0,200,150,0.15); border: 1px solid rgba(0,200,150,0.3); color: #7ab0ee; }
+    .mode-badge.problem_solver { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.25); color: #5de896; }
+    .mode-badge.hybrid       { background: rgba(224,155,46,0.1); border: 1px solid rgba(224,155,46,0.25); color: #e8c06f; }
+
+    .guide-view {
+      font-size: 0.82rem; color: var(--electric);
+      white-space: nowrap;
+      transition: opacity var(--transition);
+    }
+    .guide-view:hover { opacity: 0.8; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 3rem 2rem;
+      background: var(--deep);
+      border: 1px dashed rgba(0,200,150,0.2);
+      border-radius: var(--radius);
+    }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    .empty-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem; letter-spacing: 0.08em; margin-bottom: 0.5rem;
+    }
+    .empty-sub { color: var(--off); font-size: 0.9rem; font-weight: 300; margin-bottom: 1.5rem; }
+
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(0,200,150,0.08) 25%, rgba(0,200,150,0.15) 50%, rgba(0,200,150,0.08) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .skeleton-row {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,150,0.1);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      display: flex; gap: 1rem; align-items: center;
+    }
+    .skeleton-line { height: 14px; border-radius: 4px; }
+    .skeleton-line.short { width: 40%; }
+    .skeleton-line.long  { width: 70%; }
+    .skeleton-line.thin  { height: 10px; width: 25%; }
+
+    @media (min-width: 640px) {
+      .nav-email { display: block; }
+      .stats-row { grid-template-columns: repeat(4, 1fr); }
+    }
+    @media (min-width: 1024px) {
+      .welcome-heading { font-size: 2.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">StudyGuy</a>
+      <div class="nav-right">
+        <span class="nav-email" id="navEmail"></span>
+        <button class="btn-signout" id="btnSignOut">Sign out</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="page">
+
+    <!-- Welcome -->
+    <div class="welcome-bar fadeUp">
+      <div>
+        <h1 class="welcome-heading">Hello, <span id="userName">there</span></h1>
+        <p class="welcome-sub">Here's what's been happening with your account.</p>
+      </div>
+      <span class="plan-badge free" id="planBadge">Free plan</span>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row fadeUp fadeUp-1">
+      <div class="stat-card">
+        <div class="stat-card-label">Guides created</div>
+        <div class="stat-card-value" id="statGuides">0</div>
+        <div class="stat-card-sub">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">This month</div>
+        <div class="stat-card-value" id="statMonthGuides">0</div>
+        <div class="stat-card-sub">Guides generated</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Guides remaining</div>
+        <div class="stat-card-value" id="statRemaining">—</div>
+        <div class="stat-card-sub" id="statRemainingSub">On free plan</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">File limit</div>
+        <div class="stat-card-value" id="statFileLimit">10 MB</div>
+        <div class="stat-card-sub" id="statFileLimitSub">Per document</div>
+      </div>
+    </div>
+
+    <!-- Usage bar -->
+    <div class="usage-section fadeUp fadeUp-2">
+      <div class="usage-header">
+        <span class="usage-title">Guides used</span>
+        <span class="usage-numbers" id="usageNumbers">Loading…</span>
+      </div>
+      <div class="usage-track">
+        <div class="usage-fill" id="usageFill" style="width:0%;"></div>
+      </div>
+      <p class="usage-sub" id="usageSub"></p>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="actions-row fadeUp fadeUp-3">
+      <a href="upload.html" class="btn-primary">+ Upload new document</a>
+      <button class="btn-ghost" id="btnManageSub">Manage subscription</button>
+    </div>
+
+    <!-- Danger zone -->
+    <div class="fadeUp fadeUp-3" id="dangerZone" style="display:none; margin-bottom:2.5rem;">
+      <div class="section-header">
+        <h2 class="section-title">Account settings</h2>
+      </div>
+      <div style="background:rgba(231,76,60,0.06); border:1px solid rgba(231,76,60,0.2); border-radius:var(--radius); padding:1.5rem;">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+          <div>
+            <p style="font-weight:500; font-size:0.95rem; margin-bottom:0.3rem;">Delete my account</p>
+            <p style="font-size:0.83rem; color:var(--off); font-weight:300; max-width:420px;">Permanently deletes your account, all uploaded documents, study guides, and usage history. This cannot be undone.</p>
+          </div>
+          <button class="btn-danger" id="btnDeleteAccount">Delete account</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent guides -->
+    <div class="fadeUp fadeUp-3">
+      <div class="section-header">
+        <h2 class="section-title">Recent study guides</h2>
+      </div>
+      <div id="guidesList">
+        <!-- Skeleton loaders -->
+        <div class="guides-list" id="skeletonList">
+          <div class="skeleton-row">
+            <div style="flex:1">
+              <div class="skeleton skeleton-line long" style="margin-bottom:0.5rem;"></div>
+              <div class="skeleton skeleton-line thin"></div>
+            </div>
+            <div class="skeleton skeleton-line short" style="height:30px; width:60px;"></div>
+          </div>
+          <div class="skeleton-row">
+            <div style="flex:1">
+              <div class="skeleton skeleton-line long" style="margin-bottom:0.5rem;"></div>
+              <div class="skeleton skeleton-line thin"></div>
+            </div>
+            <div class="skeleton skeleton-line short" style="height:30px; width:60px;"></div>
+          </div>
+        </div>
+        <div id="guidesContent" style="display:none;"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    // Named 'sf' to avoid conflict with window.supabase (CDN global)
+    var sf = null;
+    try {
+      sf = window.supabase.createClient(window.SF.SUPABASE_URL, window.SF.SUPABASE_KEY);
+    } catch(e) {
+      console.error('[SF] Supabase init failed:', e);
+      window.location.href = 'login.html';
+    }
+
+    const FREE_GUIDE_LIMIT = 3; // free plan: 3 total guides
+
+    function formatDate(iso) {
+      return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    async function loadDashboard(session) {
+      const userId = session.user.id;
+      const email  = session.user.email;
+
+      document.getElementById('navEmail').textContent = email;
+
+      // Profile + subscription (graceful fallback if tables missing)
+      let fullName = email.split('@')[0];
+      let plan     = 'free';
+      let subStatus = null;
+      try {
+        const [profileRes, subRes] = await Promise.all([
+          sf.from('profiles').select('full_name').eq('id', userId).single(),
+          sf.from('subscriptions').select('plan, status').eq('user_id', userId).maybeSingle(),
+        ]);
+        fullName  = profileRes.data?.full_name || fullName;
+        plan      = (subRes.data?.status === 'active' && subRes.data?.plan) ? subRes.data.plan : 'free';
+        subStatus = subRes.data?.status || null;
+      } catch(e) { /* use defaults */ }
+
+      document.getElementById('userName').textContent = fullName;
+      const badge = document.getElementById('planBadge');
+      const planLabel = plan === 'ultra' ? 'Ultra plan' : plan === 'pro' ? 'Pro plan' : 'Free plan';
+      badge.textContent = planLabel;
+      badge.className   = 'plan-badge ' + (plan === 'ultra' ? 'ultra' : plan === 'pro' ? 'pro' : 'free');
+
+      const isPaid  = plan === 'pro' || plan === 'ultra';
+      const isUltra = plan === 'ultra';
+
+      document.getElementById('btnManageSub').textContent = isPaid ? 'Manage subscription' : 'Upgrade to Pro';
+
+      // Guide counts (graceful fallback)
+      let totalGuides = 0, monthGuides = 0;
+      try {
+        const now        = new Date();
+        const startMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const [totalRes, monthRes] = await Promise.all([
+          sf.from('study_guides').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+          sf.from('study_guides').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', startMonth),
+        ]);
+        totalGuides = totalRes.count ?? 0;
+        monthGuides = monthRes.count ?? 0;
+      } catch(e) { /* use defaults */ }
+
+      document.getElementById('statGuides').textContent      = totalGuides;
+      document.getElementById('statMonthGuides').textContent = monthGuides;
+
+      // Remaining guides + stat card sub-text
+      const remaining = isPaid ? '∞' : Math.max(0, FREE_GUIDE_LIMIT - totalGuides);
+      document.getElementById('statRemaining').textContent = String(remaining);
+      document.getElementById('statRemainingSub').textContent = isUltra ? 'Unlimited on Ultra' : isPaid ? 'Unlimited on Pro' : 'On free plan';
+
+      // File limit
+      const fileLimitMB = isUltra ? '20 MB' : '10 MB';
+      document.getElementById('statFileLimit').textContent    = fileLimitMB;
+      document.getElementById('statFileLimitSub').textContent = isUltra ? 'Ultra plan' : isPaid ? 'Pro plan' : 'Free plan';
+
+      // Usage bar
+      const pct  = isPaid ? 0 : Math.min((totalGuides / FREE_GUIDE_LIMIT) * 100, 100);
+      const fill = document.getElementById('usageFill');
+      fill.style.width = isPaid ? '100%' : pct + '%';
+      if (!isPaid && pct >= 100)    fill.classList.add('danger');
+      else if (!isPaid && pct > 66) fill.classList.add('warning');
+      if (isPaid) fill.style.background = isUltra
+        ? 'linear-gradient(90deg, #8b2be2, #c084fc)'
+        : 'linear-gradient(90deg, var(--electric), #7fffda)';
+
+      document.getElementById('usageNumbers').textContent = isPaid
+        ? 'Unlimited guides'
+        : `${totalGuides} / ${FREE_GUIDE_LIMIT} guides used`;
+
+      const usageSub = document.getElementById('usageSub');
+      if (isUltra) {
+        usageSub.textContent = 'Ultra plan: unlimited study guides · 20 MB max per file.';
+      } else if (isPaid) {
+        usageSub.textContent = 'Pro plan: unlimited study guides · 10 MB max per file.';
+      } else if (pct >= 100) {
+        usageSub.innerHTML = `You've used all ${FREE_GUIDE_LIMIT} free guides. <a href="index.html#pricing" class="upgrade-link">Upgrade to Pro</a> for unlimited guides.`;
+      } else {
+        usageSub.innerHTML = `Free plan: ${FREE_GUIDE_LIMIT} guides total · 10 MB max per file. <a href="index.html#pricing" class="upgrade-link">Upgrade to Pro</a> for unlimited.`;
+      }
+
+      // Recent guides
+      const skeleton = document.getElementById('skeletonList');
+      const content  = document.getElementById('guidesContent');
+      try {
+        const guidesRes = await sf
+          .from('study_guides')
+          .select('id, title, mode, created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        skeleton.style.display = 'none';
+        content.style.display  = 'block';
+
+        if (!guidesRes.data || guidesRes.data.length === 0) {
+          content.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">📚</div>
+              <div class="empty-title">No study guides yet</div>
+              <p class="empty-sub">Upload your first document to get started.</p>
+              <a href="upload.html" class="btn-primary">Upload a document</a>
+            </div>`;
+        } else {
+          const modeLabel = { study_guide: 'Study guide', problem_solver: 'Problem solver', hybrid: 'Hybrid' };
+          content.innerHTML = `<div class="guides-list">${
+            guidesRes.data.map(g => `
+              <div class="guide-item">
+                <div class="guide-meta">
+                  <div class="guide-title">${escHtml(g.title || 'Untitled guide')}</div>
+                  <div class="guide-info">
+                    <span class="guide-date">${formatDate(g.created_at)}</span>
+                    <span class="mode-badge ${escHtml(g.mode)}">${escHtml(modeLabel[g.mode] || g.mode)}</span>
+                  </div>
+                </div>
+                <div style="display:flex;gap:0.5rem;align-items:center;flex-shrink:0;">
+                  <a href="viewer.html?id=${g.id}" class="guide-view">View →</a>
+                </div>
+              </div>`
+            ).join('')
+          }</div>`;
+
+        }
+      } catch(e) {
+        skeleton.style.display = 'none';
+        content.style.display  = 'block';
+        content.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📚</div>
+            <div class="empty-title">No study guides yet</div>
+            <p class="empty-sub">Upload your first document to get started.</p>
+            <a href="upload.html" class="btn-primary">Upload a document</a>
+          </div>`;
+      }
+    }
+
+    if (sf) {
+      (async () => {
+        try {
+          const { data: { session } } = await sf.auth.getSession();
+          if (!session) { window.location.href = 'login.html'; return; }
+
+          // Profile check — resilient: if query fails, log and continue rather than
+          // blocking the dashboard. Edge Functions enforce age/terms server-side.
+          const ageRes = await sf.from('profiles').select('age_verified, terms_accepted').eq('id', session.user.id).maybeSingle();
+          if (ageRes.error) {
+            console.warn('[SF] Profile query error:', ageRes.error.message);
+          } else if (ageRes.data) {
+            if (!ageRes.data.age_verified)   { window.location.href = 'login.html?blocked=age';   return; }
+            if (!ageRes.data.terms_accepted) { window.location.href = 'login.html?blocked=terms'; return; }
+          }
+
+          await loadDashboard(session);
+        } catch(e) {
+          console.error('[SF] Dashboard load error:', e);
+          // Ensure the skeleton never stays visible if something throws
+          var skel = document.getElementById('skeletonList');
+          var cont = document.getElementById('guidesContent');
+          if (skel) skel.style.display = 'none';
+          if (cont) {
+            cont.style.display = 'block';
+            cont.innerHTML = '<div class="empty-state"><div class="empty-icon">📚</div><div class="empty-title">Could not load guides</div><p class="empty-sub">Refresh the page to try again.</p><a href="upload.html" class="btn-primary" style="display:inline-flex;margin-top:1rem;">Upload a document</a></div>';
+          }
+        }
+      })();
+
+      document.getElementById('btnSignOut').addEventListener('click', async () => {
+        await sf.auth.signOut();
+        window.location.href = 'index.html';
+      });
+
+      document.getElementById('btnManageSub').addEventListener('click', async () => {
+        try {
+          const { data: { session } } = await sf.auth.getSession();
+          if (!session) { window.location.href = 'login.html'; return; }
+          const { data } = await sf.from('subscriptions').select('plan, status').eq('user_id', session.user.id).maybeSingle();
+          const activePlan = data?.status === 'active' ? data?.plan : null;
+          if (activePlan === 'ultra') {
+            alert('Your Ultra plan is active.\n\nTo cancel or change your plan, contact support@studyguy.net and we\'ll process it within 24 hours.\n\n(Stripe self-service portal coming soon.)');
+          } else if (activePlan === 'pro') {
+            alert('Your Pro plan is active.\n\nTo cancel, contact support@studyguy.net and we\'ll process it within 24 hours.\n\n(Stripe self-service portal coming soon.)');
+          } else {
+            window.location.href = 'index.html#pricing';
+          }
+        } catch(e) {
+          window.location.href = 'index.html#pricing';
+        }
+      });
+
+      document.getElementById('dangerZone').style.display = 'block';
+
+      document.getElementById('btnDeleteAccount').addEventListener('click', async () => {
+        const confirmed = window.confirm(
+          'Are you sure you want to permanently delete your account?\n\nThis will delete all your documents, study guides, and usage history. This cannot be undone.'
+        );
+        if (!confirmed) return;
+
+        const btn = document.getElementById('btnDeleteAccount');
+        btn.disabled    = true;
+        btn.textContent = 'Deleting…';
+
+        try {
+          const { data: { session: currentSession } } = await sf.auth.getSession();
+          if (!currentSession) { window.location.href = 'login.html'; return; }
+
+          const response = await fetch(`${window.SF.SUPABASE_URL}/functions/v1/delete-account`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${currentSession.access_token}`,
+            },
+          });
+
+          if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error || `Server error: ${response.status}`);
+          }
+
+          await sf.auth.signOut();
+          window.location.href = 'index.html';
+        } catch (err) {
+          btn.disabled    = false;
+          btn.textContent = 'Delete account';
+          alert('Failed to delete account: ' + (err.message || 'Unknown error. Please try again or contact support.'));
+        }
+      });
+    }
+  </script>
+</body>
+</html>

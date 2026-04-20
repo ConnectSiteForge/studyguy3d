@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in — StudyGuy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy:     #050d1a;
+      --deep:     #0a1628;
+      --electric: #00c896;
+      --electric-dim: rgba(0,200,150,0.12);
+      --white:    #f4f7ff;
+      --off:      #a8b8d0;
+      --success:  #2ecc71;
+      --danger:   #e74c3c;
+      --radius:   12px;
+      --transition: 0.22s ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--navy);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+    radial-gradient(ellipse 80% 60% at 5% -10%, rgba(0,200,150,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 95% 110%, rgba(0,200,150,0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fadeUp { animation: fadeUp 0.6s ease both; }
+
+    /* Nav */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      background: rgba(5,13,26,0.8);
+      border-bottom: 1px solid rgba(0,200,150,0.1);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; padding: 0 1.25rem;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem; letter-spacing: 0.1em;
+      color: var(--electric);
+    }
+    .nav-back {
+      font-size: 0.85rem; color: var(--off);
+      transition: color var(--transition);
+    }
+    .nav-back:hover { color: var(--white); }
+
+    /* Page layout */
+    .page {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.25rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Auth card */
+    .auth-card {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,150,0.2);
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.5s ease both;
+    }
+    .auth-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--electric), rgba(0,200,150,0.2));
+    }
+
+    .auth-heading {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.35rem;
+    }
+    .auth-sub {
+      color: var(--off);
+      font-size: 0.9rem;
+      font-weight: 300;
+      margin-bottom: 2rem;
+    }
+
+    /* Tabs */
+    .auth-tabs {
+      display: flex;
+      background: rgba(0,200,150,0.08);
+      border: 1px solid rgba(0,200,150,0.15);
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 2rem;
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 0.5rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+      color: var(--off);
+      border: none;
+      background: transparent;
+    }
+    .auth-tab.active {
+      background: var(--electric);
+      color: var(--white);
+    }
+
+    /* Forms */
+    .auth-form { display: flex; flex-direction: column; gap: 1.1rem; }
+    .auth-form.hidden { display: none; }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-label {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--off);
+      letter-spacing: 0.02em;
+    }
+    .form-input {
+      background: rgba(0,200,150,0.06);
+      border: 1px solid rgba(0,200,150,0.2);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      width: 100%;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      outline: none;
+    }
+    .form-input::placeholder { color: rgba(168,184,208,0.5); }
+    .form-input:focus {
+      border-color: var(--electric);
+      box-shadow: 0 0 0 3px rgba(0,200,150,0.15);
+    }
+
+    .btn-primary {
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      background: var(--electric);
+      color: var(--white);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.05rem;
+      letter-spacing: 0.1em;
+      padding: 0.8rem 1.8rem;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+      margin-top: 0.5rem;
+    }
+    .btn-primary:hover {
+      background: #009e78;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0,200,150,0.4);
+    }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Messages */
+    .msg {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      display: none;
+    }
+    .msg.show { display: block; }
+    .msg-error {
+      background: rgba(231,76,60,0.1);
+      border: 1px solid rgba(231,76,60,0.3);
+      color: #ff8577;
+    }
+    .msg-success {
+      background: rgba(46,204,113,0.1);
+      border: 1px solid rgba(46,204,113,0.3);
+      color: #5de896;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: var(--white);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: none;
+    }
+    .spinner.show { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .auth-footer-text {
+      text-align: center;
+      color: var(--off);
+      font-size: 0.82rem;
+      margin-top: 1.5rem;
+    }
+    .auth-footer-text a {
+      color: var(--electric);
+      transition: opacity var(--transition);
+    }
+    .auth-footer-text a:hover { opacity: 0.8; }
+
+    /* Terms checkbox */
+    .terms-row {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+    }
+    .terms-row input[type="checkbox"] {
+      width: 18px; height: 18px; flex-shrink: 0;
+      margin-top: 3px;
+      accent-color: var(--electric);
+      cursor: pointer;
+    }
+    .terms-row label {
+      font-size: 0.84rem; font-weight: 300;
+      color: var(--off); line-height: 1.5;
+      cursor: pointer;
+    }
+    .terms-row a { color: var(--electric); }
+    .terms-row a:hover { opacity: 0.8; }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">StudyGuy</a>
+      <a href="index.html" class="nav-back">← Back to home</a>
+    </div>
+  </nav>
+
+  <main class="page">
+    <div class="auth-card">
+      <h1 class="auth-heading">Welcome back</h1>
+      <p class="auth-sub">Sign in to your account or create a new one.</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabSignIn" onclick="switchTab('signin')">Sign in</button>
+        <button class="auth-tab" id="tabSignUp" onclick="switchTab('signup')">Sign up</button>
+      </div>
+
+      <!-- Sign in form -->
+      <div class="auth-form" id="formSignIn">
+        <div id="errorSignIn" class="msg msg-error"></div>
+
+        <div class="form-group">
+          <label class="form-label" for="signinEmail">Email address</label>
+          <input class="form-input" type="email" id="signinEmail" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="signinPassword">Password</label>
+          <input class="form-input" type="password" id="signinPassword" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')handleSignIn()" />
+        </div>
+        <button class="btn-primary" type="button" id="btnSignIn">
+          <span class="spinner" id="spinnerSignIn"></span>
+          <span id="btnSignInText">Sign in</span>
+        </button>
+        <div id="successResetRequest" class="msg msg-success"></div>
+        <div id="errorResetRequest" class="msg msg-error"></div>
+        <p style="text-align:center;margin-top:0.75rem;">
+          <a href="#" id="forgotLink" style="color:var(--off);font-size:0.85rem;">Forgot password?</a>
+        </p>
+      </div>
+
+      <!-- Sign up form -->
+      <div class="auth-form hidden" id="formSignUp">
+        <div id="errorSignUp" class="msg msg-error"></div>
+        <div id="successSignUp" class="msg msg-success"></div>
+
+        <div class="form-group">
+          <label class="form-label" for="signupName">Full name</label>
+          <input class="form-input" type="text" id="signupName" placeholder="Jane Smith" autocomplete="name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="signupEmail">Email address</label>
+          <input class="form-input" type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="signupPassword">Password</label>
+          <input class="form-input" type="password" id="signupPassword" placeholder="At least 8 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')handleSignUp()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="signupDob">Date of birth <span style="color:var(--off);font-weight:300;font-size:0.78rem;">(minimum age: 13)</span></label>
+          <input class="form-input" type="date" id="signupDob" />
+        </div>
+        <div class="form-group" id="parentalConsentGroup" style="display:none;">
+          <div class="terms-row">
+            <input type="checkbox" id="signupParentalConsent" />
+            <label for="signupParentalConsent">I'm under 18 — I confirm I have the permission of a parent or guardian to use this service</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="terms-row">
+            <input type="checkbox" id="signupTerms" />
+            <label for="signupTerms">I agree to the <a href="terms.html" target="_blank">Terms of service</a> and <a href="privacy.html" target="_blank">Privacy policy</a></label>
+          </div>
+        </div>
+
+        <button class="btn-primary" type="button" id="btnSignUp">
+          <span class="spinner" id="spinnerSignUp"></span>
+          <span id="btnSignUpText">Create account</span>
+        </button>
+      </div>
+
+      <p class="auth-footer-text">
+        By continuing you agree to our <a href="terms.html">Terms of service</a> and <a href="privacy.html">Privacy policy</a>.
+      </p>
+    </div>
+  </main>
+
+  <script>
+    function switchTab(tab) {
+      const isSignIn = tab === 'signin';
+      document.getElementById('tabSignIn').classList.toggle('active', isSignIn);
+      document.getElementById('tabSignUp').classList.toggle('active', !isSignIn);
+      document.getElementById('formSignIn').classList.toggle('hidden', !isSignIn);
+      document.getElementById('formSignUp').classList.toggle('hidden', isSignIn);
+    }
+
+    // Support ?tab=signup in URL (e.g. from index.html "Get started" links)
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'signup') switchTab('signup');
+    })();
+  </script>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+  (function() {
+    // --- Supabase client init ---
+    // Variable named 'sf' to avoid conflict with window.supabase (CDN UMD global)
+    var sf = null;
+    try {
+      sf = window.supabase.createClient(window.SF.SUPABASE_URL, window.SF.SUPABASE_KEY);
+    } catch(e) {
+      console.error('[SF] Supabase init failed:', e);
+    }
+
+    // --- DOB date bounds + parental consent toggle ---
+    var dobEl = document.getElementById('signupDob');
+    if (dobEl) {
+      var todayStr = new Date().toISOString().split('T')[0];
+      dobEl.max = todayStr;
+      dobEl.min = (new Date().getFullYear() - 120) + '-01-01';
+      dobEl.addEventListener('change', function() {
+        if (!this.value) return;
+        var d = new Date(this.value), now = new Date();
+        var a = now.getFullYear() - d.getFullYear();
+        var mo = now.getMonth() - d.getMonth();
+        if (mo < 0 || (mo === 0 && now.getDate() < d.getDate())) a--;
+        var grp = document.getElementById('parentalConsentGroup');
+        if (a >= 13 && a < 18) {
+          grp.style.display = '';
+        } else {
+          grp.style.display = 'none';
+          document.getElementById('signupParentalConsent').checked = false;
+        }
+      });
+    }
+
+    // --- Blocked redirects ---
+    var blocked = new URLSearchParams(window.location.search).get('blocked');
+    if (blocked === 'age' || blocked === 'terms') {
+      if (sf) sf.auth.signOut();
+      var blockedEl = document.getElementById('errorSignIn');
+      blockedEl.textContent = blocked === 'age'
+        ? 'This account has been restricted because the registered date of birth does not meet the minimum age requirement (13 years). If you believe this is an error, contact support@studyguy.net.'
+        : 'Your account has not completed terms acceptance. Please create a new account or contact support@studyguy.net.';
+      blockedEl.classList.add('show');
+    }
+
+    // --- Redirect if already logged in ---
+    if (sf && !blocked) {
+      sf.auth.getSession().then(async function(res) {
+        if (res.data && res.data.session) {
+          var pr = await sf.from('profiles').select('role').eq('id', res.data.session.user.id).maybeSingle();
+          window.location.href = (pr.data && pr.data.role === 'admin') ? 'admin.html' : 'account.html';
+        }
+      });
+    }
+
+    // --- Helpers ---
+    function showError(id, msg) {
+      var el = document.getElementById(id);
+      if (!el) { console.error('[SF] showError: element not found:', id); return; }
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+    function hideMsg(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('show');
+    }
+    function setLoading(btnId, spinnerId, textId, loading) {
+      var btn = document.getElementById(btnId);
+      var sp  = document.getElementById(spinnerId);
+      var tx  = document.getElementById(textId);
+      if (btn) btn.disabled = loading;
+      if (sp)  sp.classList.toggle('show', loading);
+      if (tx)  tx.style.opacity = loading ? '0' : '1';
+    }
+    function withTimeout(promise, ms) {
+      return Promise.race([
+        promise,
+        new Promise(function(_, reject) {
+          setTimeout(function() { reject(new Error('Request timed out. Please check your connection and try again.')); }, ms);
+        })
+      ]);
+    }
+
+    // --- Sign in ---
+    function doSignIn() {
+      hideMsg('errorSignIn');
+      if (!sf) { showError('errorSignIn', 'Could not connect to the service. Please refresh and try again.'); return; }
+      var email    = document.getElementById('signinEmail').value.trim();
+      var password = document.getElementById('signinPassword').value;
+      if (!email || !password) { showError('errorSignIn', 'Please enter your email and password.'); return; }
+      setLoading('btnSignIn', 'spinnerSignIn', 'btnSignInText', true);
+      withTimeout(sf.auth.signInWithPassword({ email: email, password: password }), 10000)
+        .then(async function(res) {
+          if (res.error) { showError('errorSignIn', res.error.message); }
+          else {
+            var pr = await sf.from('profiles').select('role').eq('id', res.data.user.id).maybeSingle();
+            window.location.href = (pr.data && pr.data.role === 'admin') ? 'admin.html' : 'account.html';
+          }
+        })
+        .catch(function(err) { showError('errorSignIn', err.message || 'Something went wrong. Please try again.'); })
+        .finally(function() { setLoading('btnSignIn', 'spinnerSignIn', 'btnSignInText', false); });
+    }
+
+    // --- Forgot password ---
+    document.getElementById('forgotLink').addEventListener('click', function(e) {
+      e.preventDefault();
+      hideMsg('errorResetRequest');
+      hideMsg('successResetRequest');
+      var email = document.getElementById('signinEmail').value.trim();
+      if (!email) { showError('errorResetRequest', 'Enter your email above first.'); return; }
+      if (!sf) { showError('errorResetRequest', 'Could not connect. Please refresh.'); return; }
+      sf.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/confirm.html?type=recovery',
+      }).then(function(res) {
+        if (res.error) { showError('errorResetRequest', res.error.message); }
+        else {
+          var s = document.getElementById('successResetRequest');
+          s.textContent = 'Password reset email sent — check your inbox.';
+          s.classList.add('show');
+        }
+      });
+    });
+
+    // --- Sign up ---
+    function doSignUp() {
+      hideMsg('errorSignUp');
+      hideMsg('successSignUp');
+      if (!sf) { showError('errorSignUp', 'Could not connect to the service. Please refresh and try again.'); return; }
+      var fullName = document.getElementById('signupName').value.trim();
+      var email    = document.getElementById('signupEmail').value.trim();
+      var password = document.getElementById('signupPassword').value;
+      var dobValue = document.getElementById('signupDob').value;
+      if (!fullName)  { showError('errorSignUp', 'Please enter your full name.'); return; }
+      if (!email)     { showError('errorSignUp', 'Please enter your email address.'); return; }
+      if (!password)  { showError('errorSignUp', 'Please enter a password.'); return; }
+      if (!dobValue)  { showError('errorSignUp', 'Please enter your date of birth.'); return; }
+      if (password.length < 8) { showError('errorSignUp', 'Password must be at least 8 characters.'); return; }
+      var d = new Date(dobValue), now2 = new Date();
+      var age = now2.getFullYear() - d.getFullYear();
+      var mo2 = now2.getMonth() - d.getMonth();
+      if (mo2 < 0 || (mo2 === 0 && now2.getDate() < d.getDate())) age--;
+      if (age < 13) { showError('errorSignUp', 'You must be at least 13 years old to create an account.'); return; }
+      if (age > 120) { showError('errorSignUp', 'Please enter a valid date of birth.'); return; }
+      var isUnderage = age < 18;
+      if (isUnderage && !document.getElementById('signupParentalConsent').checked) {
+        showError('errorSignUp', 'You must confirm parental or guardian permission to create an account if you are under 18.'); return;
+      }
+      if (!document.getElementById('signupTerms').checked) {
+        showError('errorSignUp', 'You must accept the Terms of service and Privacy policy to create an account.'); return;
+      }
+      setLoading('btnSignUp', 'spinnerSignUp', 'btnSignUpText', true);
+      withTimeout(sf.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: {
+            full_name:         fullName,
+            date_of_birth:     dobValue,
+            terms_accepted:    true,
+            terms_accepted_at: new Date().toISOString(),
+            parental_consent:  isUnderage,
+          },
+          emailRedirectTo: window.location.origin + '/confirm.html',
+        },
+      }), 10000)
+        .then(function(res) {
+          if (res.error) {
+            showError('errorSignUp', res.error.message);
+          } else {
+            var successEl = document.getElementById('successSignUp');
+            successEl.textContent = 'Check your email to verify your account. You can close this tab.';
+            successEl.classList.add('show');
+            document.getElementById('formSignUp').querySelectorAll('input').forEach(function(i) { i.value = ''; });
+          }
+        })
+        .catch(function(err) { showError('errorSignUp', err.message || 'Something went wrong. Please try again.'); })
+        .finally(function() { setLoading('btnSignUp', 'spinnerSignUp', 'btnSignUpText', false); });
+    }
+
+    // Expose globally for onclick attributes
+    window.handleSignIn = doSignIn;
+    window.handleSignUp = doSignUp;
+
+    // Also wire up directly so onclick is not the only path
+    var btnIn  = document.getElementById('btnSignIn');
+    var btnUp  = document.getElementById('btnSignUp');
+    if (btnIn) btnIn.addEventListener('click', doSignIn);
+    if (btnUp) btnUp.addEventListener('click', doSignUp);
+
+    // Enter key on password fields
+    var pwIn = document.getElementById('signinPassword');
+    var pwUp = document.getElementById('signupPassword');
+    if (pwIn) pwIn.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSignIn(); });
+    if (pwUp) pwUp.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSignUp(); });
+
+  })();
+  </script>
+</body>
+</html>

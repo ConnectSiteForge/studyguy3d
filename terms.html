@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terms of service — StudyGuy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy:     #050d1a;
+      --deep:     #0a1628;
+      --electric: #00c896;
+      --white:    #f4f7ff;
+      --off:      #a8b8d0;
+      --radius:   12px;
+      --transition: 0.22s ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: var(--navy);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    a { color: var(--electric); text-decoration: none; transition: opacity var(--transition); }
+    a:hover { opacity: 0.8; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+    radial-gradient(ellipse 80% 60% at 5% -10%, rgba(0,200,150,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 95% 110%, rgba(0,200,150,0.05) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.04; pointer-events: none; z-index: 0;
+    }
+
+    /* Nav */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(10px);
+      background: rgba(5,13,26,0.85);
+      border-bottom: 1px solid rgba(0,200,150,0.1);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; padding: 0 1.25rem;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem; letter-spacing: 0.1em;
+      color: var(--electric); text-decoration: none; opacity: 1;
+    }
+    .nav-back { font-size: 0.85rem; color: var(--off); transition: color var(--transition); }
+    .nav-back:hover { color: var(--white); opacity: 1; }
+
+    /* Page */
+    .page {
+      max-width: 780px; margin: 0 auto;
+      padding: 3rem 1.25rem 5rem;
+      position: relative; z-index: 1;
+    }
+
+    .page-heading {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.8rem; letter-spacing: 0.08em;
+      margin-bottom: 0.4rem;
+    }
+    .page-meta {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem; color: var(--off);
+      letter-spacing: 0.05em; margin-bottom: 3rem;
+    }
+
+    /* Content */
+    .legal-section { margin-bottom: 2.5rem; }
+
+    .legal-section h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem; letter-spacing: 0.06em;
+      color: var(--electric);
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid rgba(0,200,150,0.2);
+    }
+
+    .legal-section p {
+      font-size: 0.95rem; font-weight: 300;
+      color: rgba(244,247,255,0.85);
+      margin-bottom: 0.75rem;
+      line-height: 1.75;
+    }
+
+    .legal-section ul {
+      margin: 0.5rem 0 0.75rem 1.5rem;
+      display: flex; flex-direction: column; gap: 0.4rem;
+    }
+    .legal-section li {
+      font-size: 0.93rem; font-weight: 300;
+      color: rgba(244,247,255,0.8);
+      line-height: 1.65;
+    }
+
+    .legal-section strong {
+      font-weight: 600; color: var(--white);
+    }
+
+    /* Highlight box */
+    .notice-box {
+      background: rgba(0,200,150,0.07);
+      border: 1px solid rgba(0,200,150,0.25);
+      border-left: 3px solid var(--electric);
+      border-radius: 0 8px 8px 0;
+      padding: 1rem 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+    .notice-box p {
+      font-size: 0.88rem; font-weight: 300;
+      color: var(--off); line-height: 1.6; margin: 0;
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid rgba(0,200,150,0.12);
+      padding: 2.5rem 1.25rem;
+      position: relative; z-index: 1;
+    }
+    .footer-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; flex-wrap: wrap;
+      align-items: center; justify-content: space-between;
+      gap: 1rem;
+    }
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem; letter-spacing: 0.1em;
+      color: var(--electric);
+    }
+    .footer-copy {
+      font-size: 0.8rem; color: var(--off); font-weight: 300;
+    }
+    .footer-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .footer-links a { font-size: 0.82rem; color: var(--off); }
+    .footer-links a:hover { color: var(--white); opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">StudyGuy</a>
+      <a href="index.html" class="nav-back">← Back to home</a>
+    </div>
+  </nav>
+
+  <main class="page">
+
+    <h1 class="page-heading">Terms of service</h1>
+    <p class="page-meta">Last updated: 14 April 2026 &nbsp;·&nbsp; Effective: 14 April 2026 &nbsp;·&nbsp; Version 1.1</p>
+
+    <div class="notice-box">
+      <p>Please read these terms carefully. To create an account, you are <strong style="color:var(--white);">required to explicitly accept</strong> these terms by ticking the acceptance checkbox at registration — you cannot create an account without doing so. Your acceptance and the UTC timestamp at which you accepted are recorded and stored. If you do not agree to these terms, do not create an account or use StudyGuy.</p>
+    </div>
+
+    <div class="notice-box" style="border-left-color:#e74c3c; background:rgba(231,76,60,0.06);">
+      <p><strong style="color:#ff8577;">Important — AI output disclaimer:</strong> StudyGuy generates study materials using artificial intelligence. AI-generated outputs are probabilistic and may be incorrect even when presented confidently. AI outputs may contain errors, omissions, hallucinations, or inaccuracies. All content produced by this service is a study aid only. It must not be submitted as your own work, relied upon for medical, legal, financial, or other professional decisions, or treated as authoritative. You are solely responsible for verifying anything you read here before acting on it.</p>
+    </div>
+
+    <p style="font-size:0.9rem; color:rgba(244,247,255,0.7); margin-bottom:2rem; line-height:1.6;">These Terms of Service ("Terms") govern your use of the StudyGuy platform, operated by <strong style="color:var(--white);">StudyGuy LLC</strong>, a Florida limited liability company ("StudyGuy", "we", "us", or "our"). By creating an account or using the Service, you agree to be bound by these Terms.</p>
+
+    <div class="notice-box" style="border-left-color:var(--electric); background:rgba(0,200,150,0.04);">
+      <p><strong style="color:var(--white);">Quick summary — what you're agreeing to</strong></p>
+      <ul style="margin-top:0.5rem; padding-left:1.25rem; display:flex; flex-direction:column; gap:0.35rem;">
+        <li>AI-generated content may be wrong — always verify before acting on it</li>
+        <li>Do not submit AI outputs as your own work in any academic or professional context</li>
+        <li>You are responsible for the files you upload and their legal compliance</li>
+        <li>The service may go down or change — we are not liable for outages or third-party failures</li>
+        <li>Free plan: 3 study guides total (lifetime, per account)</li>
+        <li>Cancel anytime by email or through your account settings where available</li>
+      </ul>
+      <p style="margin-top:0.5rem;">This summary is for convenience only. The full terms below govern your legal relationship with us.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>1. About StudyGuy</h2>
+      <p>StudyGuy ("we", "us", "our") is a software-as-a-service platform that allows users to upload documents and have them converted into study guides, problem solutions, and revision materials using artificial intelligence. We are operated by <strong>StudyGuy LLC</strong>, a limited liability company incorporated in the State of Florida, United States.</p>
+      <p>Our service is intended for personal educational use only. We are not a school, university, or accredited educational institution. We do not employ qualified teachers, tutors, doctors, lawyers, financial advisers, or any other regulated professionals, and we do not provide professional advice of any kind.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>2. Eligibility and accounts</h2>
+      <p>We comply with the U.S. Children's Online Privacy Protection Act (COPPA) and do not knowingly permit users under 13 to use the Service.</p>
+      <p>You must be at least 13 years old to use StudyGuy. At registration, you are required to provide your date of birth, which is verified against this minimum age. Accounts that do not meet the minimum age requirement are blocked from accessing the service. If you are under 18, you confirm that you have the permission of a parent or legal guardian to use this service, and that parent or guardian accepts these terms on your behalf. If you are under 18 and your parent or guardian has not in fact consented to your use of this service, you must immediately stop using the service and contact us to delete your account.</p>
+      <p><strong>Under-13 discovery:</strong> If we discover or have reason to believe that an account belongs to a user under the age of 13 — regardless of the date of birth provided at registration — we will immediately suspend and permanently delete that account and all associated data, including uploaded files and generated study guides. We will not knowingly allow anyone under 13 to use the service. If a parent or guardian becomes aware that their child under 13 has created an account without authorisation, they should contact us immediately at the address in section 21 so that we can delete the account and data.</p>
+      <p><strong>Withdrawal of parental consent:</strong> If a parent or guardian who consented on behalf of a user under 18 withdraws that consent, they must notify us in writing. Upon receipt of such notification, we will terminate the relevant account. We are not liable for any use of the service that occurred prior to receiving notice of withdrawal of consent.</p>
+      <p>You are also required to explicitly accept these terms and our Privacy policy by ticking the acceptance checkbox during registration. Account creation is blocked unless you tick this checkbox. We record the fact of your acceptance and the UTC timestamp at which it occurred. This record is our legal evidence of your agreement.</p>
+      <p>You are responsible for maintaining the security of your account credentials. You must not share your account with others or allow anyone else to access your account. You are responsible for all activity that occurs under your account. You must notify us promptly at <a href="mailto:support@studyguy.net">support@studyguy.net</a> if you become aware of or suspect any unauthorised access to your account. To the fullest extent permitted by applicable law, we are not liable for losses resulting from unauthorised access where you have failed to take reasonable steps to maintain the security of your credentials.</p>
+      <p>We reserve the right to suspend or terminate accounts that violate these terms, without prior notice where necessary.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>3. The service</h2>
+      <p>StudyGuy allows you to upload documents (PDFs, images, and text files) which are processed using AI to produce structured study materials. The output includes summaries, key concepts, flashcard-style question-and-answer sets, worked problem solutions, and practice questions.</p>
+      <p>We do not guarantee that AI-generated content is accurate, complete, up to date, or suitable for any particular purpose. AI models can and do make mistakes, including on factual matters, mathematical calculations, scientific explanations, and legal or medical information. You must verify all outputs independently before relying on them.</p>
+      <p>We may change, suspend, or discontinue any part of the service at any time, including features, pricing tiers, or AI providers, without liability to you. Where possible, we will provide advance notice of significant changes.</p>
+      <p><strong>Service availability:</strong> We do not guarantee that the service will be available at any particular time or continuously. The service may be interrupted for maintenance, updates, provider outages, or reasons beyond our control. We are not liable for any loss arising from service unavailability or degraded performance.</p>
+      <p><strong>File processing:</strong> We do not guarantee successful processing of all file types, sizes, or content. Processing may fail due to file complexity, format limitations, corrupted files, provider outages, or other factors outside our control. Supported formats include PDF, DOCX, common image formats, and plain text — however, support for specific formats may change. We are not liable for processing failures or for any loss of content submitted for processing.</p>
+      <p><strong>Usage limits:</strong> We may throttle, rate-limit, or restrict your usage at any time, including to manage computational cost, maintain fair usage across all users, and ensure service availability. This will not constitute a breach of these terms.</p>
+      <p><strong>Beta features:</strong> Certain features may be offered on a beta or experimental basis and may be modified, restricted, or removed at any time without notice or liability.</p>
+      <p><strong>Usage monitoring:</strong> We may monitor usage patterns solely for security, abuse prevention, system integrity, and fair usage enforcement purposes.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>4. No professional advice</h2>
+      <p><strong>StudyGuy does not provide medical, legal, financial, psychological, academic, or any other professional advice.</strong> Nothing produced by this service — including problem solutions, explanations, or summaries — constitutes professional advice or should be treated as such.</p>
+      <ul>
+        <li><strong>Medical:</strong> AI-generated content relating to biology, medicine, pharmacology, or health is for general educational purposes only. It must not be used for diagnosis, treatment, or any clinical decision. Always consult a qualified medical professional.</li>
+        <li><strong>Legal:</strong> AI-generated content relating to law, contracts, regulations, or legal processes is for general educational purposes only. It does not constitute legal advice and must not be relied upon in any legal matter. Always consult a qualified attorney or lawyer.</li>
+        <li><strong>Financial:</strong> AI-generated content relating to finance, investment, tax, or accounting is for general educational purposes only. It does not constitute financial advice. Always consult a qualified financial adviser.</li>
+        <li><strong>Academic:</strong> AI-generated study materials are a personal revision aid. They are not a substitute for attending classes, reading primary sources, or consulting your tutor or lecturer.</li>
+      </ul>
+      <p>We expressly disclaim all liability for any action taken or not taken in reliance on AI-generated content produced by this service.</p>
+      <p><strong>Hazardous or dangerous content:</strong> AI models may, in the context of processing educational or scientific documents, produce outputs that touch on topics such as chemistry, biology, pharmacology, engineering, or other fields where information could theoretically be misused. We are not responsible for any harm caused by the misuse of AI-generated content. You must not use any AI output from this service to cause harm to yourself or others. If the service produces content you believe is dangerous or inappropriate, you should disregard it and report it to us.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>5. Academic integrity and your institution's rules</h2>
+      <p>StudyGuy is a personal study aid. You are solely responsible for understanding and complying with the academic integrity policies, honour codes, and assessment rules of your school, college, university, or other institution.</p>
+      <p><strong>Submitting AI-generated content as your own original work</strong> may constitute academic misconduct, plagiarism, or cheating under your institution's rules. We have no visibility into your institution's policies and cannot advise you on what is or is not permitted. If in doubt, consult your institution before using AI-generated materials in assessed work.</p>
+      <p>To the fullest extent permitted by applicable law, we accept no liability for any academic penalty, disqualification, expulsion, grade reduction, or other consequence you suffer as a result of how you use the outputs of this service.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>6. User content and uploaded files</h2>
+      <p><strong>Your responsibility:</strong> By uploading a file to StudyGuy, you represent and warrant that:</p>
+      <ul>
+        <li>You have the legal right to upload, share, and process that content</li>
+        <li>You own the copyright in the material, or have a valid licence, or have a lawful basis to use it (such as fair dealing for private study under applicable copyright law)</li>
+        <li>Uploading the material does not violate any confidentiality obligation, non-disclosure agreement, institutional rule, or third-party right</li>
+        <li>The material is not classified, restricted, or confidential in a manner that prohibits sharing it with a third-party AI processing service</li>
+      </ul>
+      <p><strong>Textbooks, course packs, and proprietary materials:</strong> Uploading commercially published textbooks, licensed course materials, or content distributed under restricted terms (for example, materials marked "not for distribution" or provided under an institutional site licence) may infringe copyright. It is your responsibility to determine whether doing so is lawful in your jurisdiction. We do not screen uploaded content for copyright compliance and we are not liable for any infringement you commit.</p>
+      <p>You retain ownership of your uploaded content. By uploading, you grant us a limited, non-exclusive licence to process your content solely for the purpose of generating your study materials. We do not claim ownership of your documents and do not use them to train AI models.</p>
+      <p><strong>Prohibited content:</strong> You must not upload:</p>
+      <ul>
+        <li>Content that infringes the intellectual property rights of a third party without authorisation</li>
+        <li>Content that is unlawful, harmful, threatening, abusive, defamatory, or obscene</li>
+        <li>Personal data of third parties without their consent</li>
+        <li>Malicious files, scripts, or code designed to harm systems</li>
+        <li>Live examination papers, unseen assessment materials, or any content whose upload or sharing is prohibited by your institution or an examination body</li>
+        <li>Confidential, classified, or proprietary business information belonging to a third party</li>
+      </ul>
+      <p>We are not responsible for the content of files you upload. All legal, academic, and contractual responsibility for uploaded content rests entirely with you.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>7. Copyright complaints (DMCA / takedown)</h2>
+      <p>We respect the intellectual property rights of others. If you believe that content stored on our service infringes your copyright, you may submit a written takedown notice to us at <a href="mailto:legal@studyguy.net">legal@studyguy.net</a>.</p>
+      <p>Your notice must include:</p>
+      <ul>
+        <li>A description of the copyrighted work you claim has been infringed</li>
+        <li>A description of the infringing material and its location within our service</li>
+        <li>Your contact details (name, address, email, telephone number)</li>
+        <li>A statement that you have a good-faith belief that the use is not authorised by the copyright owner, its agent, or law</li>
+        <li>A statement that the information in your notice is accurate, and under penalty of perjury, that you are the copyright owner or are authorised to act on their behalf</li>
+        <li>Your electronic or physical signature</li>
+      </ul>
+      <p>We will process valid notices promptly and remove or disable access to the infringing material where appropriate. Repeat infringers will have their accounts terminated. Submitting a false takedown notice may expose you to legal liability.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>8. Indemnification</h2>
+      <p>You agree to indemnify, defend, and hold harmless StudyGuy, its directors, officers, employees, contractors, and agents from and against any and all claims, damages, losses, costs, and expenses (including reasonable legal fees) arising out of or relating to:</p>
+      <ul>
+        <li>Your violation of these terms</li>
+        <li>Content you upload to the service, including any copyright infringement or breach of third-party rights</li>
+        <li>Your violation of any academic integrity policy, institutional rule, or examination regulation</li>
+        <li>Any reliance you or a third party places on AI-generated content produced by the service</li>
+        <li>Your violation of any applicable law or regulation</li>
+        <li>Any dispute between you and a third party arising from your use of the service</li>
+      </ul>
+    </div>
+
+    <div class="legal-section">
+      <h2>9. AI processing and third-party providers</h2>
+      <p>StudyGuy uses third-party services to process your documents and generate study materials. By using StudyGuy, you acknowledge that data from your uploaded content may be transmitted to these providers for processing:</p>
+      <ul>
+        <li><strong>Anthropic (Claude):</strong> Primary AI provider. Extracted and compressed document text is sent to Anthropic's API to generate your study guide. Anthropic processes this data under their usage policy and does not use API inputs to train models.</li>
+        <li><strong>Cloudflare Workers:</strong> Our pdf-vision worker may receive your PDF data to perform image-based text extraction (OCR) for documents that cannot be read as plain text. Data is processed in Cloudflare's infrastructure and is not retained beyond the processing request.</li>
+        <li><strong>Supabase:</strong> Database and file storage provider. Your uploaded files and generated study guides are stored in Supabase-managed infrastructure.</li>
+        <li><strong>Stripe:</strong> Payment processor. Handles all billing and subscription management. We do not store your payment card details.</li>
+      </ul>
+      <p>The specific data handling practices of each provider are described in our <a href="privacy.html#processors">Privacy policy</a>. We are not responsible for the acts or omissions of third-party providers, including any errors, outages, data handling practices, or changes to their services.</p>
+      <p>We reserve the right to change, add, or remove third-party AI providers at any time to improve the service or maintain availability. We will update our Privacy policy when we do so.</p>
+      <p><strong>Service dependency:</strong> The Service depends on these and other third-party providers for its core functionality. If a provider discontinues, degrades, or modifies their service, we may need to change, suspend, or substitute components of the Service without prior notice. We are not liable for any loss or disruption resulting from the acts or failures of third-party providers.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>10. Subscriptions and payments</h2>
+      <p>StudyGuy offers a free tier and a Pro subscription. Pricing and plan details are set out on our pricing page and may change with 30 days' notice.</p>
+      <p>Pro subscriptions are billed in advance via Stripe. Your subscription renews automatically unless you cancel before the renewal date.</p>
+      <p><strong>Cancellation:</strong> You may cancel your Pro subscription at any time by emailing <a href="mailto:support@studyguy.net">support@studyguy.net</a> or through your account settings where available. We will process email cancellation requests within 24 hours. Cancellation takes effect at the end of your current billing period. We do not offer partial refunds for unused time within a billing period, except where required by applicable law.</p>
+      <p><strong>Refunds:</strong> If you believe you are entitled to a refund under consumer protection law, please contact us within 14 days of your purchase.</p>
+      <p><strong>Failed payments:</strong> If a payment fails, we may suspend or downgrade your account to the free tier until payment is resolved. We are not liable for any loss arising from account downgrade due to a failed payment.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>11. Free tier limits</h2>
+      <p>The free tier allows up to <strong>3 study guides</strong> to be generated per account in total (lifetime — not per month or per year). Once that limit is reached, you must upgrade to Pro to continue. This limit applies per account. Creating multiple accounts to circumvent this limit is prohibited and may result in all associated accounts being suspended. We reserve the right to adjust free tier limits with 30 days' notice.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>12. Intellectual property</h2>
+      <p>StudyGuy, its branding, interface design, and underlying software are owned by us and protected by intellectual property law. You may not copy, modify, distribute, or create derivative works from our platform or its components.</p>
+      <p>The AI-generated study guides produced from your uploaded content are yours to use for your own personal, non-commercial educational purposes only — including private study, personal revision, and sharing informally with classmates for non-commercial purposes. You may not resell, publish, distribute at scale, use for commercial tutoring or instruction, or represent them as your own original work in any academic or professional submission.</p>
+      <p><strong>Export disclaimer:</strong> We are not responsible for how exported study materials (including PDF and DOCX exports) are used, distributed, or relied upon outside the Service.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>13. Acceptable use</h2>
+      <p>You agree not to:</p>
+      <ul>
+        <li>Access the Service via automated means, bots, or scripts without our prior written permission</li>
+        <li>Attempt to reverse-engineer, scrape, or extract data from our service in an automated manner</li>
+        <li>Circumvent usage limits or access controls</li>
+        <li>Resell or sublicence access to our service</li>
+        <li>Use the service in a way that violates any applicable law or regulation</li>
+        <li>Interfere with or disrupt the security or integrity of our systems</li>
+        <li>Use AI outputs from StudyGuy to train or fine-tune any AI or machine learning model</li>
+        <li>Upload content on behalf of another person without their knowledge or consent</li>
+        <li>Represent AI-generated outputs as your own original work in any academic or professional submission</li>
+        <li>Exploit the service in any way that imposes an unreasonable or disproportionate load on our infrastructure</li>
+      </ul>
+    </div>
+
+    <div class="legal-section">
+      <h2>14. Limitation of liability</h2>
+      <p>To the fullest extent permitted by applicable law, StudyGuy, its directors, officers, employees, contractors, and agents shall not be liable for any loss or damage arising from:</p>
+      <ul>
+        <li>Errors, inaccuracies, hallucinations, or omissions in AI-generated content</li>
+        <li>Reliance on AI-generated content for any medical, legal, financial, or other professional decision</li>
+        <li>Academic penalties, disciplinary action, or loss of qualifications resulting from how you use the service</li>
+        <li>Copyright infringement or breach of third-party rights arising from content you upload</li>
+        <li>Loss of data, loss of access, service interruptions, or processing failures</li>
+        <li>Acts or omissions of third-party providers (including Anthropic, Cloudflare, Supabase, and Stripe)</li>
+        <li>Delays or failures caused by events outside our reasonable control (see Force Majeure, section 17)</li>
+        <li>Any indirect, incidental, special, consequential, exemplary, or punitive damages of any kind, including loss of profits, revenue, goodwill, or anticipated savings, even if we have been advised of the possibility of such damages</li>
+        <li>Any loss arising from your reliance on the service being available at any particular time</li>
+        <li>Any decision made on the basis of AI-generated content, regardless of the domain</li>
+      </ul>
+      <p>Our total aggregate liability to you for any and all claims arising from or related to these terms or your use of the service shall not exceed the greater of: (a) the total amount you paid to us in the 12 calendar months immediately preceding the event giving rise to the claim; or (b) $50 USD.</p>
+      <p>This limitation applies to all causes of action in aggregate, including breach of contract, tort (including negligence), strict liability, and any other legal or equitable theory.</p>
+      <p>Nothing in these terms limits or excludes our liability for: death or personal injury caused by our negligence; fraud or fraudulent misrepresentation; or any other liability that cannot be excluded or limited under applicable law.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>15. Disclaimers</h2>
+      <p>The service is provided "as is" and "as available" without any warranty of any kind, express or implied, including but not limited to warranties of accuracy, reliability, completeness, fitness for a particular purpose, title, or non-infringement. We expressly disclaim any warranty of non-infringement with respect to AI-generated outputs — we make no representation that content generated by AI models does not incorporate, reproduce, or infringe upon third-party copyrighted material.</p>
+      <p>We do not warrant that:</p>
+      <ul>
+        <li>AI-generated content is correct, complete, current, or free from errors or hallucinations</li>
+        <li>The service will be available without interruption, error, or defect</li>
+        <li>The service is suitable for use in any formal educational, professional, clinical, or assessed context</li>
+        <li>Files you upload will be processed successfully in all cases</li>
+        <li>Any particular AI model or processing approach will remain available</li>
+      </ul>
+      <p><strong>No academic results guaranteed:</strong> We make no representation that using StudyGuy will improve your academic performance, help you pass any examination, achieve any particular grade, or produce any specific educational outcome. The service is a revision aid only. Results depend entirely on your own effort, understanding, and circumstances, which are outside our control.</p>
+      <p>You use the service entirely at your own risk.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>16. Suspension and termination</h2>
+      <p>We may suspend or terminate your access to the service at any time, with or without notice, if we believe you have violated these terms, engaged in fraudulent activity, posed a risk to the service or other users, or attempted to exploit, manipulate, or misuse AI outputs, system limits, or computational resources.</p>
+      <p>On termination, your right to use the service ceases immediately. We may delete your account data in accordance with our Privacy policy. Sections that by their nature should survive termination — including indemnification, limitation of liability, disclaimers, intellectual property, and governing law — will continue to apply.</p>
+      <p>You may terminate your account at any time by contacting us at <a href="mailto:support@studyguy.net">support@studyguy.net</a>. <strong>Account deletion is permanent and irreversible.</strong> Deleting your account will result in the permanent loss of access to all uploaded files and generated study guides. This cannot be undone. Data deletion occurs in accordance with our <a href="privacy.html">Privacy policy</a>.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>17. Force majeure</h2>
+      <p>We will not be liable for any failure or delay in performing our obligations under these terms where such failure or delay results from events beyond our reasonable control, including but not limited to: acts of God; natural disasters; pandemic or epidemic; acts of government or regulatory authority; war, terrorism, or civil unrest; power outages; internet or network failures; denial-of-service attacks; failures of third-party infrastructure or services (including AI providers, cloud platforms, and payment processors); or any other cause beyond our reasonable control.</p>
+      <p>In such circumstances, our obligations will be suspended for the duration of the event. We will use reasonable efforts to resume normal service as soon as practicable.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>18. Changes to these terms</h2>
+      <p>We may update these terms from time to time. We will notify you of material changes by email or by displaying a notice within the service at least 14 days before the changes take effect. Continued use of the service after that date constitutes your acceptance of the updated terms.</p>
+      <p>If you do not agree to updated terms, you must stop using the service before the effective date of the changes.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>19. Governing law and dispute resolution</h2>
+      <p>These terms are governed by the laws of the State of Florida, United States, without regard to its conflict of law provisions. Any disputes arising from these terms or your use of the service shall be subject to the exclusive jurisdiction of the state and federal courts located in Florida, United States, and you consent to personal jurisdiction in those courts.</p>
+      <p>If you are a consumer resident in another jurisdiction — including the United Kingdom, European Union, or Australia — you may have additional rights under your local consumer protection laws that these terms do not override.</p>
+      <p>Before initiating formal legal proceedings, you agree to first contact us at <a href="mailto:legal@studyguy.net">legal@studyguy.net</a> and attempt to resolve the dispute informally. We will respond within 14 days of receiving notice of a dispute.</p>
+      <p><strong>Binding arbitration:</strong> If informal resolution fails, any dispute, claim, or controversy arising out of or relating to these terms or your use of the service — excluding claims that qualify for small claims court — shall be resolved by binding individual arbitration administered by the American Arbitration Association (AAA) under its Consumer Arbitration Rules, rather than in court. The arbitration shall take place in Florida, United States, or by videoconference at either party's request. The arbitrator's decision shall be final and binding on both parties.</p>
+      <p><strong>Class action waiver:</strong> You agree that any arbitration or legal proceeding shall be conducted on an individual basis only. You waive any right to bring or participate in any class action, collective action, or representative action against us. If this waiver is found unenforceable, the arbitration clause above shall not apply to that claim.</p>
+      <p><strong>Jury trial waiver:</strong> To the fullest extent permitted by applicable law, you and StudyGuy LLC each waive the right to a trial by jury for any dispute arising out of or relating to these terms or the service.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>20. General provisions</h2>
+      <p><strong>Entire agreement:</strong> These terms, together with our Privacy policy, constitute the entire agreement between you and StudyGuy with respect to your use of the service, and supersede all prior agreements, representations, and understandings.</p>
+      <p><strong>Severability:</strong> If any provision of these terms is found to be unlawful, void, or unenforceable, that provision will be severed from these terms and will not affect the validity and enforceability of the remaining provisions.</p>
+      <p><strong>Waiver:</strong> Our failure to enforce any right or provision of these terms will not be considered a waiver of that right or provision. Any waiver must be in writing and signed by us to be effective.</p>
+      <p><strong>Assignment:</strong> You may not assign or transfer your rights or obligations under these terms without our prior written consent. We may assign or transfer our rights and obligations under these terms without restriction.</p>
+      <p><strong>No third-party beneficiaries:</strong> These terms do not confer any rights or remedies on any third party.</p>
+      <p><strong>Notices:</strong> All legal notices to us must be sent by email to <a href="mailto:legal@studyguy.net">legal@studyguy.net</a>. Email communication constitutes valid written notice for all purposes under these Terms. Notices will be deemed received when sent.</p>
+      <p><strong>Business transfers:</strong> In the event of a merger, acquisition, reorganisation, or sale of all or substantially all of our assets, your personal data and account information may be transferred as part of that transaction. We will notify you of any such transfer and any material change to how your data is handled, in accordance with our Privacy policy.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2>21. Contact</h2>
+      <p>If you have any questions about these terms, wish to report a violation, or wish to make a complaint, please contact us:</p>
+      <p><strong>Email:</strong> <a href="mailto:legal@studyguy.net">legal@studyguy.net</a></p>
+      <p><strong>Support:</strong> <a href="mailto:support@studyguy.net">support@studyguy.net</a></p>
+      <p>We aim to respond to all enquiries within 5 business days.</p>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-logo">StudyGuy</div>
+      <p class="footer-copy">© 2026 StudyGuy. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="privacy.html">Privacy policy</a>
+        <a href="terms.html">Terms of service</a>
+        <a href="login.html">Sign in</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

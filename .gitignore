@@ -1,8 +1,38 @@
-/node_modules
-/.next/
-/out/
-.env*
+# ─── Secrets & environment ────────────────────────────────────────────────────
+.env
+.env.*
 !.env.example
+
+# Generated config — SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY are public keys,
+# safe to commit. Only .env (which contains service_role, Stripe secret, etc.) stays gitignored.
+# config.js
+
+# ─── OS junk ──────────────────────────────────────────────────────────────────
 .DS_Store
-*.tsbuildinfo
-next-env.d.ts
+Thumbs.db
+desktop.ini
+
+# ─── Editor / IDE ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ─── Node (if any tooling is added) ──────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ─── Supabase local dev ───────────────────────────────────────────────────────
+.supabase/
+supabase/.temp/
+
+# ─── Build output ─────────────────────────────────────────────────────────────
+dist/
+build/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example

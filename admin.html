@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — StudyGuy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy:     #050d1a;
+      --deep:     #0a1628;
+      --electric: #00c896;
+      --electric-dim: rgba(0,200,150,0.12);
+      --white:    #f4f7ff;
+      --off:      #a8b8d0;
+      --success:  #2ecc71;
+      --danger:   #e74c3c;
+      --radius:   12px;
+      --transition: 0.22s ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: var(--navy);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 5% -10%, rgba(0,200,150,0.07) 0%, transparent 55%),
+        radial-gradient(ellipse 55% 45% at 95% 110%, rgba(0,200,150,0.05) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.04; pointer-events: none; z-index: 0;
+    }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin   { to { transform: rotate(360deg); } }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .fadeUp   { animation: fadeUp 0.5s ease both; }
+    .fadeUp-1 { animation-delay: 0.1s; }
+    .fadeUp-2 { animation-delay: 0.2s; }
+    .fadeUp-3 { animation-delay: 0.3s; }
+
+    /* Nav */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(10px);
+      background: rgba(5,13,26,0.85);
+      border-bottom: 1px solid rgba(0,200,150,0.1);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; padding: 0 1.25rem;
+      max-width: 1200px; margin: 0 auto;
+    }
+    .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.1em; color: var(--electric); }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .admin-pill {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem; letter-spacing: 0.1em;
+      padding: 0.2rem 0.6rem; border-radius: 100px;
+      background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.3);
+      color: #ff8577;
+    }
+    .btn-signout {
+      font-size: 0.85rem; color: var(--off);
+      background: none; border: none; cursor: pointer;
+      transition: color var(--transition);
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-signout:hover { color: var(--danger); }
+
+    /* Page */
+    .page { max-width: 1200px; margin: 0 auto; padding: 2.5rem 1.25rem; position: relative; z-index: 1; }
+    .page-header { margin-bottom: 2rem; }
+    .page-heading { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 0.08em; }
+    .page-sub { color: var(--off); font-size: 0.9rem; font-weight: 300; margin-top: 0.3rem; }
+
+    /* Error */
+    .error-msg {
+      background: rgba(231,76,60,0.08); border: 1px solid rgba(231,76,60,0.2);
+      border-radius: var(--radius); padding: 1rem 1.25rem;
+      color: #ff8577; font-size: 0.88rem; display: none; margin-bottom: 1.5rem;
+    }
+    .error-msg.show { display: block; }
+
+    /* Stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,150,0.15);
+      border-radius: var(--radius);
+      padding: 1.4rem 1.5rem;
+      position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--electric), rgba(0,200,150,0.2));
+    }
+    .stat-card.danger::before { background: linear-gradient(90deg, var(--danger), rgba(231,76,60,0.2)); }
+    .stat-card.warn::before   { background: linear-gradient(90deg, #f39c12, rgba(243,156,18,0.2)); }
+    .stat-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem; letter-spacing: 0.1em;
+      color: var(--off); text-transform: uppercase; margin-bottom: 0.4rem;
+    }
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.4rem; letter-spacing: 0.06em; line-height: 1;
+    }
+    .stat-sub { font-size: 0.76rem; color: var(--off); font-weight: 300; margin-top: 0.2rem; }
+
+    .skeleton {
+      background: linear-gradient(90deg, rgba(0,200,150,0.08) 25%, rgba(0,200,150,0.15) 50%, rgba(0,200,150,0.08) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 4px;
+      height: 2.2rem; width: 55%;
+    }
+
+    /* Section */
+    .section { margin-top: 2.5rem; }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 0.08em; }
+
+    .btn-refresh {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.82rem; color: var(--electric);
+      background: rgba(0,200,150,0.08); border: 1px solid rgba(0,200,150,0.2);
+      padding: 0.4rem 0.9rem; border-radius: 8px;
+      cursor: pointer; transition: background var(--transition);
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-refresh:hover { background: rgba(0,200,150,0.15); }
+
+    /* Table */
+    .table-wrap {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,150,0.15);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { border-bottom: 1px solid rgba(0,200,150,0.15); }
+    th {
+      text-align: left; padding: 0.8rem 1.1rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem; letter-spacing: 0.1em;
+      color: var(--off); text-transform: uppercase; font-weight: 400;
+      white-space: nowrap;
+    }
+    td {
+      padding: 0.8rem 1.1rem;
+      font-size: 0.87rem;
+      border-bottom: 1px solid rgba(0,200,150,0.07);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(0,200,150,0.03); }
+    .table-empty { text-align: center; padding: 2.5rem; color: var(--off); font-size: 0.88rem; font-weight: 300; }
+
+    /* Badges */
+    .badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem; letter-spacing: 0.05em;
+      padding: 0.15rem 0.5rem; border-radius: 100px;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .badge-done       { background: rgba(46,204,113,0.1);  border: 1px solid rgba(46,204,113,0.25); color: #5de896; }
+    .badge-processing { background: rgba(0,200,150,0.12);  border: 1px solid rgba(0,200,150,0.3);   color: #7ab0ee; }
+    .badge-pending    { background: rgba(168,184,208,0.08);border: 1px solid rgba(168,184,208,0.2); color: var(--off); }
+    .badge-error      { background: rgba(231,76,60,0.1);   border: 1px solid rgba(231,76,60,0.25);  color: #ff8577; }
+    .badge-pro        { background: rgba(0,200,150,0.12);  border: 1px solid rgba(0,200,150,0.3);   color: var(--electric); }
+    .badge-ultra      { background: rgba(138,43,226,0.15); border: 1px solid rgba(138,43,226,0.4);  color: #c084fc; }
+    .badge-free       { background: rgba(168,184,208,0.08);border: 1px solid rgba(168,184,208,0.2); color: var(--off); }
+
+    .mono-sm { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: var(--off); }
+    .truncate { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .stat-card.profit { grid-column: 1 / -1; display: flex; align-items: center; gap: 2rem; }
+    .stat-card.profit .stat-value { font-size: 3rem; }
+    .stat-card.profit.positive::before { background: linear-gradient(90deg, var(--success), rgba(46,204,113,0.2)); }
+    .stat-card.profit.negative::before { background: linear-gradient(90deg, var(--danger),  rgba(231,76,60,0.2)); }
+    .profit-meta { display: flex; flex-direction: column; gap: 0.2rem; }
+    .stat-value.positive { color: var(--success); }
+    .stat-value.negative { color: var(--danger); }
+    @media (min-width: 640px)  { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 1024px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">StudyGuy</a>
+      <div class="nav-right">
+        <span class="admin-pill">Admin</span>
+        <button class="btn-signout" id="btnSignOut">Sign out</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="page">
+    <div class="page-header fadeUp">
+      <h1 class="page-heading">Admin panel</h1>
+      <p class="page-sub" id="lastUpdated">Loading…</p>
+    </div>
+
+    <div id="errorMsg" class="error-msg"></div>
+
+    <!-- Stats -->
+    <div class="stats-grid fadeUp fadeUp-1">
+      <div class="stat-card">
+        <div class="stat-label">Total users</div>
+        <div class="stat-value" id="statUsers"><div class="skeleton"></div></div>
+        <div class="stat-sub">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Study guides</div>
+        <div class="stat-value" id="statGuides"><div class="skeleton"></div></div>
+        <div class="stat-sub">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pro subscribers</div>
+        <div class="stat-value" id="statPro"><div class="skeleton"></div></div>
+        <div class="stat-sub">Active · $10/mo each</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Ultra subscribers</div>
+        <div class="stat-value" id="statUltra"><div class="skeleton"></div></div>
+        <div class="stat-sub">Active · $20/mo each</div>
+      </div>
+      <div class="stat-card warn">
+        <div class="stat-label">Queue now</div>
+        <div class="stat-value" id="statQueue"><div class="skeleton"></div></div>
+        <div class="stat-sub">Pending + processing</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tokens this month</div>
+        <div class="stat-value" id="statTokens"><div class="skeleton"></div></div>
+        <div class="stat-sub" id="statDocsMonth">— docs processed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Cost this month</div>
+        <div class="stat-value" id="statCost"><div class="skeleton"></div></div>
+        <div class="stat-sub" id="statCostBreak">AI + Supabase + ConvertAPI</div>
+      </div>
+      <div class="stat-card profit" id="statProfitCard">
+        <div>
+          <div class="stat-label">Est. profit this month</div>
+          <div class="stat-value" id="statProfit"><div class="skeleton"></div></div>
+        </div>
+        <div class="profit-meta">
+          <div class="stat-sub" id="statRevenue">Revenue —</div>
+          <div class="stat-sub" id="statTotalCostLine">Total cost —</div>
+          <div class="stat-sub" id="statErrors">— errors this month</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent jobs -->
+    <div class="section fadeUp fadeUp-2">
+      <div class="section-header">
+        <h2 class="section-title">Recent jobs</h2>
+        <button class="btn-refresh" id="btnRefresh">↻ Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Document</th>
+                <th>Mode</th>
+                <th>Status</th>
+                <th>Tokens</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="jobsTable">
+              <tr><td colspan="6" class="table-empty">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent users -->
+    <div class="section fadeUp fadeUp-3">
+      <div class="section-header">
+        <h2 class="section-title">Recent signups</h2>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Plan</th>
+                <th>Joined</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable">
+              <tr><td colspan="4" class="table-empty">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    var sf = window.supabase.createClient(window.SF.SUPABASE_URL, window.SF.SUPABASE_KEY);
+
+    var MODE_LABELS = { study_guide: 'Study guide', problem_solver: 'Problem solver', hybrid: 'Hybrid' };
+
+    function fmt(n) {
+      if (n == null) return '—';
+      if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+      if (n >= 1000)    return (n / 1000).toFixed(1) + 'k';
+      return String(n);
+    }
+    function fmtDate(iso) {
+      return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+    function fmtTime(iso) {
+      return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    }
+    function showError(msg) {
+      var el = document.getElementById('errorMsg');
+      el.textContent = msg; el.classList.add('show');
+    }
+    function badge(cls, text) {
+      return '<span class="badge badge-' + cls + '">' + text + '</span>';
+    }
+    function esc(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function renderJobs(jobs) {
+      var tbody = document.getElementById('jobsTable');
+      if (!jobs || jobs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="table-empty">No jobs yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = jobs.map(function(j) {
+        var statusBadge = badge(j.status === 'done' ? 'done' : j.status === 'error' ? 'error' : j.status === 'processing' ? 'processing' : 'pending', j.status || 'unknown');
+        return '<tr>'
+          + '<td class="mono-sm">' + esc(j.user_email) + '</td>'
+          + '<td><div class="truncate">' + esc(j.document_name || 'Untitled') + '</div></td>'
+          + '<td class="mono-sm">' + esc(MODE_LABELS[j.mode] || j.mode || '—') + '</td>'
+          + '<td>' + statusBadge + '</td>'
+          + '<td class="mono-sm">' + fmt(j.token_cost) + '</td>'
+          + '<td class="mono-sm">' + fmtDate(j.created_at) + '<br><span style="font-size:0.65rem;opacity:0.6;">' + fmtTime(j.created_at) + '</span></td>'
+          + '</tr>';
+      }).join('');
+    }
+
+    function renderUsers(users) {
+      var tbody = document.getElementById('usersTable');
+      if (!users || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="table-empty">No users yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = users.map(function(u) {
+        var planBadge = badge(u.plan === 'pro' ? 'pro' : u.plan === 'ultra' ? 'ultra' : 'free', u.plan || 'free');
+        return '<tr>'
+          + '<td class="mono-sm">' + esc(u.email) + '</td>'
+          + '<td>' + esc(u.full_name || '—') + '</td>'
+          + '<td>' + planBadge + '</td>'
+          + '<td class="mono-sm">' + fmtDate(u.created_at) + '</td>'
+          + '</tr>';
+      }).join('');
+    }
+
+    async function loadAdminData(session) {
+      var response = await fetch(window.SF.SUPABASE_URL + '/functions/v1/admin-stats', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + session.access_token },
+      });
+
+      if (response.status === 401) { window.location.href = 'login.html'; return; }
+      if (response.status === 403) { window.location.href = 'account.html'; return; }
+      if (!response.ok) {
+        var err = await response.json().catch(function() { return {}; });
+        throw new Error(err.error || 'Server error ' + response.status);
+      }
+
+      var d = await response.json();
+
+      document.getElementById('statUsers').textContent  = fmt(d.total_users);
+      document.getElementById('statGuides').textContent = fmt(d.total_guides);
+      document.getElementById('statPro').textContent    = fmt(d.pro_subscribers);
+      document.getElementById('statUltra').textContent  = fmt(d.ultra_subscribers || 0);
+      document.getElementById('statQueue').textContent  = fmt(d.queue_depth);
+      document.getElementById('statTokens').textContent = fmt(d.tokens_this_month);
+      document.getElementById('statDocsMonth').textContent = (d.docs_this_month || 0) + ' docs this month';
+
+      // Cost breakdown
+      var aiC  = (d.ai_cost_this_month  || 0).toFixed(2);
+      var fixC = (d.fixed_cost_monthly  || 0).toFixed(2);
+      var totC = (d.cost_this_month     || 0).toFixed(2);
+      document.getElementById('statCost').textContent      = '$' + totC;
+      document.getElementById('statCostBreak').textContent = 'AI $' + aiC + ' + infra $' + fixC;
+
+      // Profit
+      var profit    = d.profit_this_month || 0;
+      var profitEl  = document.getElementById('statProfit');
+      var profitCard = document.getElementById('statProfitCard');
+      profitEl.textContent = (profit >= 0 ? '+' : '') + '$' + profit.toFixed(2);
+      profitEl.className   = 'stat-value ' + (profit >= 0 ? 'positive' : 'negative');
+      profitCard.classList.remove('positive', 'negative');
+      profitCard.classList.add(profit >= 0 ? 'positive' : 'negative');
+
+      var proSubs   = d.pro_subscribers   || 0;
+      var ultraSubs = d.ultra_subscribers || 0;
+      var revParts  = [];
+      if (proSubs   > 0) revParts.push(proSubs   + ' pro × $10');
+      if (ultraSubs > 0) revParts.push(ultraSubs + ' ultra × $20');
+      if (revParts.length === 0) revParts.push('0 subscribers');
+      document.getElementById('statRevenue').textContent = 'Revenue $' + (d.revenue_this_month || 0).toFixed(2) + ' (' + revParts.join(' + ') + ')';
+      document.getElementById('statTotalCostLine').textContent = 'Costs $' + (d.cost_this_month || 0).toFixed(2) + ' (AI $' + (d.ai_cost_this_month || 0).toFixed(2) + ' + infra $' + (d.fixed_cost_monthly || 0).toFixed(2) + ')';
+      document.getElementById('statErrors').textContent        = (d.errors_this_month || 0) + ' errors this month';
+
+      var now = new Date();
+      document.getElementById('lastUpdated').textContent =
+        'Last updated ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+      renderJobs(d.recent_jobs || []);
+      renderUsers(d.recent_users || []);
+    }
+
+    var _pollInterval = null;
+
+    async function getSession() {
+      var res = await sf.auth.getSession();
+      return res.data.session;
+    }
+
+    async function poll() {
+      var session = await getSession();
+      if (!session) { window.location.href = 'login.html'; return; }
+      try {
+        await loadAdminData(session);
+      } catch (e) {
+        showError('Refresh failed: ' + e.message);
+      }
+    }
+
+    (async function() {
+      var session = await getSession();
+      if (!session) { window.location.href = 'login.html'; return; }
+
+      var pr = await sf.from('profiles').select('role').eq('id', session.user.id).maybeSingle();
+      if (!pr.data || pr.data.role !== 'admin') { window.location.href = 'account.html'; return; }
+
+      try {
+        await loadAdminData(session);
+      } catch (e) {
+        showError('Failed to load admin data: ' + e.message);
+      }
+
+      // Poll every 30 seconds
+      _pollInterval = setInterval(poll, 30000);
+    })();
+
+    document.getElementById('btnRefresh').addEventListener('click', async function() {
+      document.getElementById('jobsTable').innerHTML  = '<tr><td colspan="6" class="table-empty">Loading…</td></tr>';
+      document.getElementById('usersTable').innerHTML = '<tr><td colspan="4" class="table-empty">Loading…</td></tr>';
+      document.getElementById('errorMsg').classList.remove('show');
+      await poll();
+    });
+
+    document.getElementById('btnSignOut').addEventListener('click', async function() {
+      await sf.auth.signOut();
+      window.location.href = 'login.html';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload document — StudyGuy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy:     #050d1a;
+      --deep:     #0a1628;
+      --electric: #00c896;
+      --electric-dim: rgba(0,200,150,0.12);
+      --white:    #f4f7ff;
+      --off:      #a8b8d0;
+      --success:  #2ecc71;
+      --danger:   #e74c3c;
+      --radius:   12px;
+      --transition: 0.22s ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--navy);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+    radial-gradient(ellipse 80% 60% at 5% -10%, rgba(0,200,150,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 95% 110%, rgba(0,200,150,0.05) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.04; pointer-events: none; z-index: 0;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+    .fadeUp { animation: fadeUp 0.5s ease both; }
+    .fadeUp-1 { animation-delay: 0.1s; }
+    .fadeUp-2 { animation-delay: 0.2s; }
+
+    /* Nav */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(10px);
+      background: rgba(5,13,26,0.85);
+      border-bottom: 1px solid rgba(0,200,150,0.1);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; padding: 0 1.25rem;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.1em; color: var(--electric); }
+    .nav-back { font-size: 0.85rem; color: var(--off); transition: color var(--transition); }
+    .nav-back:hover { color: var(--white); }
+
+    /* Page */
+    .page { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.25rem; position: relative; z-index: 1; }
+
+    .page-heading { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+    .page-sub { color: var(--off); font-size: 0.9rem; font-weight: 300; margin-bottom: 2rem; }
+
+    /* Upload card */
+    .upload-card {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,150,0.2);
+      border-radius: var(--radius);
+      padding: 2rem;
+      position: relative; overflow: hidden;
+    }
+    .upload-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--electric), rgba(0,200,150,0.2));
+    }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 2px dashed rgba(0,200,150,0.3);
+      border-radius: 10px;
+      padding: 2.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+      margin-bottom: 1.75rem;
+      position: relative;
+    }
+    .drop-zone:hover, .drop-zone.dragging {
+      border-color: var(--electric);
+      background: var(--electric-dim);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-icon { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
+    .drop-text { font-weight: 500; margin-bottom: 0.35rem; }
+    .drop-sub { font-size: 0.82rem; color: var(--off); font-weight: 300; }
+    .drop-sub span { color: var(--electric); font-weight: 500; }
+
+    /* Selected file */
+    .file-preview {
+      background: rgba(0,200,150,0.08);
+      border: 1px solid rgba(0,200,150,0.25);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 1.75rem;
+      display: none;
+    }
+    .file-preview.show { display: flex; }
+    .file-preview-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .file-preview-info { flex: 1; min-width: 0; }
+    .file-preview-name { font-weight: 500; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-preview-size { font-size: 0.78rem; color: var(--off); font-family: 'Space Mono', monospace; }
+    .file-preview-remove { background: none; border: none; cursor: pointer; color: var(--off); font-size: 1rem; transition: color var(--transition); }
+    .file-preview-remove:hover { color: var(--danger); }
+
+    /* Form fields */
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.5rem; }
+    .form-label { font-size: 0.82rem; font-weight: 500; color: var(--off); }
+    .form-input {
+      background: rgba(0,200,150,0.06);
+      border: 1px solid rgba(0,200,150,0.2);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      width: 100%;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      outline: none;
+    }
+    .form-input::placeholder { color: rgba(168,184,208,0.45); }
+    .form-input:focus { border-color: var(--electric); box-shadow: 0 0 0 3px rgba(0,200,150,0.15); }
+
+    /* Mode selector */
+    .mode-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+    .mode-option { display: none; }
+    .mode-label {
+      display: flex; align-items: flex-start; gap: 1rem;
+      background: rgba(0,200,150,0.05);
+      border: 1.5px solid rgba(0,200,150,0.15);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .mode-option:checked + .mode-label {
+      border-color: var(--electric);
+      background: var(--electric-dim);
+    }
+    .mode-radio-dot {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,200,150,0.4);
+      flex-shrink: 0; margin-top: 2px;
+      transition: border-color var(--transition), background var(--transition);
+      position: relative;
+    }
+    .mode-option:checked + .mode-label .mode-radio-dot {
+      border-color: var(--electric);
+      background: var(--electric);
+    }
+    .mode-radio-dot::after {
+      content: '';
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--white);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .mode-option:checked + .mode-label .mode-radio-dot::after { opacity: 1; }
+    .mode-info-title { font-weight: 500; font-size: 0.9rem; margin-bottom: 0.2rem; }
+    .mode-info-desc  { font-size: 0.8rem; color: var(--off); font-weight: 300; }
+
+    /* Buttons */
+    .btn-primary {
+      display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+      background: var(--electric);
+      color: var(--white);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem; letter-spacing: 0.1em;
+      padding: 0.85rem 2rem;
+      border-radius: var(--radius);
+      border: none; cursor: pointer; width: 100%;
+      margin-top: 0.5rem;
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+    }
+    .btn-primary:hover { background: #009e78; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,200,150,0.35); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: var(--white); border-radius: 50%; animation: spin 0.6s linear infinite; display: none; }
+    .spinner.show { display: block; }
+
+    /* Validation error */
+    .msg { padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.88rem; line-height: 1.5; display: none; margin-bottom: 1rem; }
+    .msg.show { display: block; }
+    .msg-error { background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.3); color: #ff8577; }
+
+    /* Processing overlay */
+    .processing-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(5,13,26,0.92);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .processing-overlay.show { display: flex; }
+    .processing-card {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,150,0.3);
+      border-radius: var(--radius);
+      padding: 3rem 2.5rem;
+      text-align: center; max-width: 380px; width: 90%;
+      position: relative; overflow: hidden;
+    }
+    .processing-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--electric), rgba(0,200,150,0.2));
+    }
+    .processing-spinner {
+      width: 56px; height: 56px;
+      border: 3px solid rgba(0,200,150,0.2);
+      border-top-color: var(--electric);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1.5rem;
+    }
+    .processing-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+    .processing-sub { color: var(--off); font-size: 0.88rem; font-weight: 300; line-height: 1.6; }
+    .processing-stage {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem; color: var(--electric);
+      letter-spacing: 0.05em; margin-top: 1rem;
+      animation: pulse 2s infinite;
+    }
+    .queue-position {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem; color: var(--off);
+      letter-spacing: 0.04em; margin-top: 0.6rem;
+    }
+    .queue-position .queue-num { color: var(--electric); }
+
+    /* Upgrade prompt */
+    .upgrade-prompt {
+      background: rgba(231,76,60,0.08);
+      border: 1px solid rgba(231,76,60,0.25);
+      border-radius: var(--radius);
+      padding: 2rem; text-align: center;
+      display: none;
+    }
+    .upgrade-prompt.show { display: block; }
+    .upgrade-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .upgrade-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+    .upgrade-sub { color: var(--off); font-size: 0.88rem; font-weight: 300; margin-bottom: 1.5rem; }
+    .btn-upgrade {
+      display: inline-flex; align-items: center;
+      background: var(--electric); color: var(--white);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem; letter-spacing: 0.1em;
+      padding: 0.7rem 1.5rem; border-radius: var(--radius);
+      border: none; cursor: pointer;
+      transition: background var(--transition);
+    }
+    .btn-upgrade:hover { background: #009e78; }
+
+    @media (min-width: 640px) {
+      .mode-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">StudyGuy</a>
+      <a href="account.html" class="nav-back">← Back to dashboard</a>
+    </div>
+  </nav>
+
+  <main class="page">
+    <h1 class="page-heading fadeUp">Upload a document</h1>
+    <p class="page-sub fadeUp fadeUp-1">Upload a PDF, image, or text file and choose how you'd like it processed.</p>
+
+    <!-- Upgrade prompt (shown if over limit) -->
+    <div class="upgrade-prompt" id="upgradePrompt">
+      <div class="upgrade-icon">⚠️</div>
+      <div class="upgrade-title">Usage limit reached</div>
+      <p class="upgrade-sub">You've used all 3 free study guides. Upgrade to Pro for unlimited guides at $4/week.</p>
+      <button class="btn-upgrade" onclick="alert('Stripe not yet configured — add your Stripe keys to enable upgrades.')">Upgrade to Pro</button>
+    </div>
+
+    <!-- Upload form -->
+    <div id="uploadForm">
+      <div class="upload-card fadeUp fadeUp-1">
+
+        <div id="formError" class="msg msg-error"></div>
+
+        <!-- Drop zone -->
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept=".pdf,.docx,.png,.jpg,.jpeg,.txt,.md" />
+          <span class="drop-icon">📁</span>
+          <p class="drop-text">Drag and drop your file here</p>
+          <p class="drop-sub">or <span>click to browse</span> — PDF, DOCX, TXT, PNG, JPG · max 10MB</p>
+        </div>
+
+        <!-- File preview -->
+        <div class="file-preview" id="filePreview">
+          <span class="file-preview-icon" id="fileIcon">📄</span>
+          <div class="file-preview-info">
+            <div class="file-preview-name" id="fileName"></div>
+            <div class="file-preview-size" id="fileSize"></div>
+          </div>
+          <button class="file-preview-remove" id="fileRemove" title="Remove file">✕</button>
+        </div>
+
+        <!-- Document name -->
+        <div class="form-group">
+          <label class="form-label" for="docName">Document name</label>
+          <input class="form-input" type="text" id="docName" placeholder="e.g. Chapter 5 — Cell Biology" maxlength="120" />
+        </div>
+
+        <!-- Mode selector -->
+        <div class="form-group">
+          <label class="form-label">Output mode</label>
+          <div class="mode-grid">
+            <div>
+              <input class="mode-option" type="radio" name="mode" id="modeStudy" value="study_guide" checked />
+              <label class="mode-label" for="modeStudy">
+                <div class="mode-radio-dot"></div>
+                <div>
+                  <div class="mode-info-title">📚 Study guide</div>
+                  <div class="mode-info-desc">Revision notes, key concepts, definitions</div>
+                </div>
+              </label>
+            </div>
+            <div>
+              <input class="mode-option" type="radio" name="mode" id="modeProblems" value="problem_solver" />
+              <label class="mode-label" for="modeProblems">
+                <div class="mode-radio-dot"></div>
+                <div>
+                  <div class="mode-info-title">🔬 Problem solver</div>
+                  <div class="mode-info-desc">Step-by-step worked solutions</div>
+                </div>
+              </label>
+            </div>
+            <div>
+              <input class="mode-option" type="radio" name="mode" id="modeHybrid" value="hybrid" />
+              <label class="mode-label" for="modeHybrid">
+                <div class="mode-radio-dot"></div>
+                <div>
+                  <div class="mode-info-title">⚗️ Hybrid</div>
+                  <div class="mode-info-desc">Concepts + worked examples combined</div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grade level selector -->
+        <div class="form-group">
+          <label class="form-label" for="gradeLevel">Grade level</label>
+          <select class="form-input" id="gradeLevel">
+            <option value="k-5">Primary school (K–5)</option>
+            <option value="middle_school">Middle school (Grades 6–8)</option>
+            <option value="high_school" selected>High school</option>
+            <option value="college">University / College</option>
+          </select>
+        </div>
+
+        <button class="btn-primary" id="btnSubmit" type="button">
+          <span class="spinner" id="spinner"></span>
+          <span id="btnText">Generate study guide</span>
+        </button>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Processing overlay -->
+  <div class="processing-overlay" id="processingOverlay">
+    <div class="processing-card">
+      <div class="processing-spinner"></div>
+      <div class="processing-title" id="processingTitle">Processing your document</div>
+      <p class="processing-sub" id="processingSub">Calculating wait time…</p>
+      <div class="processing-stage" id="processingStage">Uploading file…</div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    // Named 'sf' to avoid conflict with window.supabase (CDN global)
+    var sf = null;
+    try {
+      sf = window.supabase.createClient(window.SF.SUPABASE_URL, window.SF.SUPABASE_KEY);
+    } catch(e) {
+      console.error('[SF] Supabase init failed:', e);
+    }
+
+    var FREE_GUIDE_LIMIT = 3;
+    var MAX_SIZE         = 10 * 1024 * 1024; // default 10MB — updated after subscription check
+    var ALLOWED_EXTS     = ['.pdf', '.png', '.jpg', '.jpeg', '.txt', '.md', '.docx'];
+
+    var session      = null;
+    var selectedFile = null;
+    var pollInterval = null;
+
+    function fileTypeCategory(file) {
+      if (file.type === 'application/pdf') return 'pdf';
+      if (file.type.startsWith('image/')) return 'image';
+      return 'text'; // txt, md, docx all route as text; process-job handles each
+    }
+    function fileIcon(ext) {
+      if (ext === '.pdf')  return '📕';
+      if (ext === '.docx') return '📝';
+      if (['.png', '.jpg', '.jpeg'].includes(ext)) return '🖼️';
+      return '📄';
+    }
+    function formatBytes(b) {
+      if (b < 1024) return b + ' B';
+      if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+      return (b / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+    function showError(msg) {
+      var el = document.getElementById('formError');
+      el.textContent = msg;
+      el.classList.add('show');
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function hideError() { document.getElementById('formError').classList.remove('show'); }
+    function setProcessingStage(text) { document.getElementById('processingStage').textContent = text; }
+    function resetSubmitBtn() {
+      document.getElementById('btnSubmit').disabled = false;
+      document.getElementById('spinner').classList.remove('show');
+      document.getElementById('btnText').style.opacity = '1';
+    }
+
+    // Sanitise filename for storage — removes diacritics and characters that
+    // would break the HTTP URL when constructing the storage download path.
+    function sanitizeFilename(name) {
+      var dot  = name.lastIndexOf('.');
+      var base = dot > 0 ? name.slice(0, dot) : name;
+      var ext  = dot > 0 ? name.slice(dot).toLowerCase() : '';
+      return base
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')   // strip diacritics
+        .replace(/[^a-zA-Z0-9._-]/g, '_') // replace anything else
+        .replace(/_+/g, '_')               // collapse underscores
+        .slice(0, 80)
+        .replace(/^_+|_+$/g, '')
+        + ext;
+    }
+
+    // SHA-256 of the full file bytes — used for server-side duplicate check.
+    async function computeFileHash(file) {
+      var buf  = await file.arrayBuffer();
+      var hash = await crypto.subtle.digest('SHA-256', buf);
+      return Array.from(new Uint8Array(hash))
+        .map(function(b) { return b.toString(16).padStart(2, '0'); })
+        .join('');
+    }
+
+    function selectFile(file) {
+      var ext = '.' + file.name.split('.').pop().toLowerCase();
+      if (!ALLOWED_EXTS.includes(ext)) {
+        showError('File type not supported. Please upload: ' + ALLOWED_EXTS.join(', '));
+        return;
+      }
+      if (file.size > MAX_SIZE) {
+        showError('File is too large (' + formatBytes(file.size) + '). Maximum size is 10 MB.');
+        return;
+      }
+      hideError();
+      selectedFile = file;
+
+      document.getElementById('dropZone').style.display = 'none';
+      var preview = document.getElementById('filePreview');
+      preview.classList.add('show');
+      document.getElementById('fileIcon').textContent = fileIcon(ext);
+      document.getElementById('fileName').textContent = file.name;
+      document.getElementById('fileSize').textContent = formatBytes(file.size);
+
+      var nameField = document.getElementById('docName');
+      if (!nameField.value) {
+        nameField.value = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+      }
+    }
+
+    // ── File selection (no Supabase needed — always attach) ──────────────
+    var dropZone  = document.getElementById('dropZone');
+    var fileInput = document.getElementById('fileInput');
+
+    dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('dragging'); });
+    dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('dragging'); });
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.classList.remove('dragging');
+      var f = e.dataTransfer.files[0];
+      if (f) selectFile(f);
+    });
+    fileInput.addEventListener('change', function(e) {
+      var f = e.target.files[0];
+      if (f) selectFile(f);
+    });
+
+    document.getElementById('fileRemove').addEventListener('click', function() {
+      selectedFile = null;
+      fileInput.value = '';
+      document.getElementById('filePreview').classList.remove('show');
+      document.getElementById('dropZone').style.display = '';
+      document.getElementById('docName').value = '';
+    });
+
+    // ── Submit ────────────────────────────────────────────────────────────
+    document.getElementById('btnSubmit').addEventListener('click', async function() {
+      hideError();
+
+      if (!sf)      { showError('Could not connect to the service. Please refresh the page.'); return; }
+      if (!session) { showError('You must be signed in to upload. Please sign in again.'); return; }
+      if (!selectedFile) { showError('Please select a file to upload.'); return; }
+
+      var docName = document.getElementById('docName').value.trim();
+      if (!docName) { showError('Please enter a name for your document.'); return; }
+      var mode = document.querySelector('input[name="mode"]:checked').value;
+
+      document.getElementById('btnSubmit').disabled = true;
+      document.getElementById('spinner').classList.add('show');
+      document.getElementById('btnText').style.opacity = '0';
+
+      try {
+        setProcessingStage('Preparing upload…');
+        document.getElementById('processingOverlay').classList.add('show');
+
+        var userId       = session.user.id;
+        var uuid         = crypto.randomUUID();
+        var safeFilename = sanitizeFilename(selectedFile.name);
+        var storagePath  = userId + '/' + uuid + '/' + safeFilename;
+
+        // Hash the file bytes before uploading — used for server-side dedup.
+        var fileHash = await computeFileHash(selectedFile);
+
+        setProcessingStage('Uploading file…');
+
+        var uploadResult = await sf.storage
+          .from('documents')
+          .upload(storagePath, selectedFile, { cacheControl: '3600', upsert: false });
+
+        if (uploadResult.error) throw new Error('Upload failed: ' + uploadResult.error.message);
+
+        setProcessingStage('Starting AI pipeline…');
+
+        var sessionResult  = await sf.auth.getSession();
+        var currentSession = sessionResult.data.session;
+
+        var response = await fetch(window.SF.SUPABASE_URL + '/functions/v1/upload-handler', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + currentSession.access_token,
+          },
+          body: JSON.stringify({
+            file_path:   storagePath,
+            name:        docName,
+            file_type:   fileTypeCategory(selectedFile),
+            mode:        mode,
+            grade_level: document.getElementById('gradeLevel').value,
+            size_bytes:  selectedFile.size,
+            file_hash:   fileHash,
+          }),
+        });
+
+        if (!response.ok) {
+          var err = await response.json().catch(function() { return {}; });
+          throw new Error(err.error || ('Server error: ' + response.status));
+        }
+
+        var result = await response.json();
+        if (result.duplicate) {
+          setProcessingStage('Guide already exists — loading…');
+        } else {
+          setProcessingStage('Extracting and compressing content…');
+        }
+        pollForCompletion(result.document_id);
+
+      } catch (err) {
+        document.getElementById('processingOverlay').classList.remove('show');
+        resetSubmitBtn();
+        showError(err.message || 'Something went wrong. Please try again.');
+      }
+    });
+
+    // ── Poll for completion ───────────────────────────────────────────────
+    function pollForCompletion(documentId) {
+      var stages = [
+        'Extracting text from document…',
+        'Analysing and compressing content…',
+        'Generating study guide with AI…',
+        'Running quality check…',
+        'Finalising your guide…',
+      ];
+      var stageIdx  = 0;
+      var pollCount = 0;
+      var MAX_POLLS = 200; // 200 × 3 s = 10 minutes max wait
+
+      pollInterval = setInterval(async function() {
+        pollCount++;
+        if (pollCount >= MAX_POLLS) {
+          clearInterval(pollInterval);
+          document.getElementById('processingOverlay').classList.remove('show');
+          resetSubmitBtn();
+          showError('Processing is taking longer than expected. Check your dashboard in a few minutes — your guide may still complete.');
+          return;
+        }
+
+        var res = await sf
+          .from('documents')
+          .select('status, error_message, created_at')
+          .eq('id', documentId)
+          .single();
+
+        if (res.error || !res.data) return;
+
+        // Queue position — only meaningful while still pending
+        if (res.data.status === 'pending' && res.data.created_at) {
+          var posRes = await sf
+            .from('documents')
+            .select('*', { count: 'exact', head: true })
+            .in('status', ['pending', 'processing'])
+            .lte('created_at', res.data.created_at);
+          if (!posRes.error && posRes.count != null) {
+            var pos      = posRes.count;
+            var mins     = Math.ceil(pos * 90 / 60);
+            var estLabel = '~' + mins + ' minute' + (mins === 1 ? '' : 's');
+            document.getElementById('processingTitle').textContent = 'Position ' + pos + ' in queue';
+            document.getElementById('processingSub').textContent   = 'Estimated wait: ' + estLabel;
+            setProcessingStage('Waiting for a free slot…');
+          }
+        } else if (res.data.status === 'processing') {
+          document.getElementById('processingTitle').textContent = 'Processing your document';
+          document.getElementById('processingSub').textContent   = 'Reading, analysing, and generating your study guide.';
+          stageIdx = (stageIdx + 1) % stages.length;
+          setProcessingStage(stages[stageIdx]);
+        }
+
+        if (res.data.status === 'done') {
+          clearInterval(pollInterval);
+          var guideRes = await sf
+            .from('study_guides')
+            .select('id')
+            .eq('document_id', documentId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          window.location.href = guideRes.data
+            ? 'viewer.html?id=' + guideRes.data.id
+            : 'account.html';
+
+        } else if (res.data.status === 'error') {
+          clearInterval(pollInterval);
+          document.getElementById('processingOverlay').classList.remove('show');
+          resetSubmitBtn();
+          showError(res.data.error_message || 'Processing failed. Please try again.');
+        }
+      }, 3000);
+    }
+
+    // ── Auth + guide-limit check ──────────────────────────────────────────
+    (async function() {
+      if (!sf) {
+        showError('Could not connect to the service. Please refresh the page.');
+        return;
+      }
+      var sessionResult = await sf.auth.getSession();
+      var s = sessionResult.data.session;
+      if (!s) { window.location.href = 'login.html'; return; }
+
+      // Profile check — if the query fails (e.g. network blip), log and continue;
+      // the Edge Function enforces age/terms server-side as the real gate.
+      var ageRes = await sf.from('profiles').select('age_verified, terms_accepted').eq('id', s.user.id).maybeSingle();
+      if (ageRes.error) {
+        console.warn('[SF] Profile query failed:', ageRes.error.message, '— skipping client-side check');
+      } else if (ageRes.data) {
+        if (!ageRes.data.age_verified)  { window.location.href = 'login.html?blocked=age';   return; }
+        if (!ageRes.data.terms_accepted) { window.location.href = 'login.html?blocked=terms'; return; }
+      }
+      session = s;
+
+      var results = await Promise.all([
+        sf.from('subscriptions').select('plan, status').eq('user_id', s.user.id).maybeSingle(),
+        sf.from('study_guides').select('id', { count: 'exact', head: true }).eq('user_id', s.user.id),
+      ]);
+      var plan     = (results[0].data && results[0].data.plan) || 'free';
+      var isActive = (plan === 'pro' || plan === 'ultra') && results[0].data && results[0].data.status === 'active';
+      var used     = results[1].count || 0;
+
+      // Set upload size limit based on plan
+      if (plan === 'ultra' && isActive) {
+        MAX_SIZE = 20 * 1024 * 1024;
+        document.querySelector('.drop-sub').innerHTML = 'or <span>click to browse</span> — PDF, DOCX, TXT, PNG, JPG · max 20MB';
+      }
+
+      if (!isActive && used >= FREE_GUIDE_LIMIT) {
+        document.getElementById('upgradePrompt').classList.add('show');
+        document.getElementById('uploadForm').style.display = 'none';
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirming your email — StudyGuy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy:     #050d1a;
+      --deep:     #0a1628;
+      --electric: #00c896;
+      --electric-dim: rgba(0,200,150,0.12);
+      --white:    #f4f7ff;
+      --off:      #a8b8d0;
+      --success:  #2ecc71;
+      --danger:   #e74c3c;
+      --radius:   12px;
+      --transition: 0.22s ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--navy);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+    radial-gradient(ellipse 80% 60% at 5% -10%, rgba(0,200,150,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 95% 110%, rgba(0,200,150,0.05) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.04;
+      pointer-events: none; z-index: 0;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes checkPop {
+      0%   { transform: scale(0) rotate(-30deg); opacity: 0; }
+      70%  { transform: scale(1.15) rotate(5deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(10px);
+      background: rgba(5,13,26,0.8);
+      border-bottom: 1px solid rgba(0,200,150,0.1);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; padding: 0 1.25rem;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem; letter-spacing: 0.1em;
+      color: var(--electric);
+    }
+
+    .page {
+      flex: 1; display: flex;
+      align-items: center; justify-content: center;
+      padding: 3rem 1.25rem;
+      position: relative; z-index: 1;
+    }
+
+    .confirm-card {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,150,0.2);
+      border-radius: var(--radius);
+      padding: 3rem 2.5rem;
+      width: 100%; max-width: 420px;
+      text-align: center;
+      position: relative; overflow: hidden;
+      animation: fadeUp 0.5s ease both;
+    }
+    .confirm-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--electric), rgba(0,200,150,0.2));
+    }
+
+    /* Loading state */
+    .state { display: none; }
+    .state.active { display: block; }
+
+    .spinner-large {
+      width: 56px; height: 56px;
+      border: 3px solid rgba(0,200,150,0.2);
+      border-top-color: var(--electric);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1.5rem;
+    }
+
+    /* Success state */
+    .check-icon {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: rgba(46,204,113,0.12);
+      border: 2px solid rgba(46,204,113,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 1.5rem;
+      animation: checkPop 0.5s ease 0.1s both;
+    }
+
+    /* Error state */
+    .error-icon {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: rgba(231,76,60,0.12);
+      border: 2px solid rgba(231,76,60,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 1.5rem;
+    }
+
+    .state-heading {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem; letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+    }
+    .state-sub {
+      color: var(--off);
+      font-size: 0.92rem; font-weight: 300;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .countdown {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--electric);
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+    }
+
+    .progress-bar {
+      height: 3px;
+      background: rgba(0,200,150,0.2);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--electric);
+      border-radius: 2px;
+      width: 100%;
+      transition: width 1s linear;
+    }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      background: var(--electric);
+      color: var(--white);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.05rem; letter-spacing: 0.1em;
+      padding: 0.75rem 1.8rem;
+      border-radius: var(--radius);
+      border: none; cursor: pointer;
+      transition: background var(--transition);
+    }
+    .btn-primary:hover { background: #009e78; }
+
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: transparent;
+      color: var(--off);
+      font-size: 0.88rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0,200,150,0.2);
+      cursor: pointer;
+      transition: color var(--transition), border-color var(--transition);
+      margin-top: 0.75rem;
+    }
+    .btn-ghost:hover { color: var(--white); border-color: var(--electric); }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">StudyGuy</a>
+    </div>
+  </nav>
+
+  <main class="page">
+    <div class="confirm-card">
+
+      <!-- Loading -->
+      <div class="state active" id="stateLoading">
+        <div class="spinner-large"></div>
+        <h1 class="state-heading">Verifying your email</h1>
+        <p class="state-sub">Please wait a moment while we confirm your account.</p>
+      </div>
+
+      <!-- Success -->
+      <div class="state" id="stateSuccess">
+        <div class="check-icon">✓</div>
+        <h1 class="state-heading">Email verified!</h1>
+        <p class="state-sub">Your account is confirmed. You'll be redirected to your dashboard shortly.</p>
+        <div class="countdown" id="countdownText">Redirecting in 5 seconds…</div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <a href="account.html" class="btn-primary">Go to dashboard now</a>
+      </div>
+
+      <!-- Reset password form -->
+      <div class="state" id="stateReset">
+        <div class="check-icon">🔑</div>
+        <h1 class="state-heading">Set new password</h1>
+        <p class="state-sub">Enter a new password for your account.</p>
+        <div id="errorReset" style="color:var(--danger);font-size:0.88rem;margin-bottom:1rem;display:none;"></div>
+        <div style="margin-bottom:1rem;">
+          <input id="resetPassword" type="password" placeholder="New password (min 8 chars)" autocomplete="new-password"
+            style="width:100%;padding:0.7rem 1rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:var(--white);font-size:0.95rem;box-sizing:border-box;" />
+        </div>
+        <button class="btn-primary" id="btnResetPassword" type="button">Update password</button>
+      </div>
+
+      <!-- Error -->
+      <div class="state" id="stateError">
+        <div class="error-icon">✕</div>
+        <h1 class="state-heading">Verification failed</h1>
+        <p class="state-sub" id="errorMessage">The link may have expired or already been used. Please try signing up or signing in again.</p>
+        <a href="login.html" class="btn-primary">Back to sign in</a>
+        <br />
+        <a href="login.html" class="btn-ghost">Create new account</a>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+  (function() {
+    // Named 'sf' to avoid conflict with window.supabase (CDN global)
+    var sf = null;
+    try {
+      sf = window.supabase.createClient(window.SF.SUPABASE_URL, window.SF.SUPABASE_KEY);
+    } catch(e) {
+      console.error('[SF] Supabase init failed:', e);
+    }
+
+    function showState(id) {
+      var states = document.querySelectorAll('.state');
+      for (var i = 0; i < states.length; i++) states[i].classList.remove('active');
+      document.getElementById(id).classList.add('active');
+    }
+
+    function showError(msg) {
+      if (msg) document.getElementById('errorMessage').textContent = msg;
+      showState('stateError');
+    }
+
+    function startCountdown() {
+      var seconds = 5;
+      var countdownEl = document.getElementById('countdownText');
+      var progressEl  = document.getElementById('progressFill');
+
+      progressEl.style.width = '100%';
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() { progressEl.style.width = '0%'; });
+      });
+
+      var interval = setInterval(function() {
+        seconds--;
+        countdownEl.textContent = 'Redirecting in ' + seconds + ' second' + (seconds !== 1 ? 's' : '') + '…';
+        if (seconds <= 0) {
+          clearInterval(interval);
+          window.location.href = 'account.html';
+        }
+      }, 1000);
+    }
+
+    function verify() {
+      if (!sf) {
+        showError('Could not connect to the service. Please refresh the page.');
+        return;
+      }
+
+      var params    = new URLSearchParams(window.location.search);
+      var tokenHash = params.get('token_hash');
+      var type      = params.get('type') || 'email';
+      var code      = params.get('code');
+
+      // If no token in the URL at all, fail immediately
+      if (!tokenHash && !code) {
+        showError('No verification token found. The link may be invalid or expired — please sign up again.');
+        return;
+      }
+
+      // 15-second safety timeout
+      var timedOut = false;
+      var timer = setTimeout(function() {
+        timedOut = true;
+        showError('Verification timed out. Please check your connection and try again, or request a new link.');
+      }, 15000);
+
+      function done() {
+        if (timedOut) return;
+        clearTimeout(timer);
+        showState('stateSuccess');
+        startCountdown();
+      }
+
+      function fail(msg) {
+        if (timedOut) return;
+        clearTimeout(timer);
+        showError(msg || 'Verification failed. The link may have expired — please sign up again.');
+      }
+
+      var isRecovery = (type === 'recovery');
+
+      function showResetForm() {
+        if (timedOut) return;
+        clearTimeout(timer);
+        showState('stateReset');
+        document.getElementById('btnResetPassword').addEventListener('click', function() {
+          var pw = document.getElementById('resetPassword').value;
+          var errEl = document.getElementById('errorReset');
+          errEl.style.display = 'none';
+          if (pw.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+          sf.auth.updateUser({ password: pw }).then(function(res) {
+            if (res.error) { errEl.textContent = res.error.message; errEl.style.display = 'block'; }
+            else { window.location.href = 'login.html'; }
+          });
+        });
+      }
+
+      if (tokenHash) {
+        sf.auth.verifyOtp({ token_hash: tokenHash, type: type })
+          .then(function(res) {
+            if (res.error) { fail(res.error.message); }
+            else if (isRecovery) { showResetForm(); }
+            else { done(); }
+          })
+          .catch(function(err) { fail(err.message); });
+
+      } else {
+        sf.auth.exchangeCodeForSession(code)
+          .then(function(res) {
+            if (res.error) { fail(res.error.message); }
+            else if (isRecovery) { showResetForm(); }
+            else { done(); }
+          })
+          .catch(function(err) { fail(err.message); });
+      }
+    }
+
+    verify();
+  })();
+  </script>
+</body>
+</html>

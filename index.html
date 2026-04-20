@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyGuy — Revision notes from any document</title>
+  <meta name="description" content="Upload your notes, textbooks, or lecture slides. StudyGuy turns them into clear revision notes, worked solutions, or flashcard sets — ready to study from." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <style>
+    /* ── Design tokens ─────────────────────────────────────── */
+    :root {
+      --navy:     #050d1a;
+      --deep:     #0a1628;
+      --electric: #00c896;
+      --electric-dim: rgba(0,200,150,0.12);
+      --electric-glow: rgba(0,200,150,0.35);
+      --white:    #f4f7ff;
+      --off:      #a8b8d0;
+      --success:  #2ecc71;
+      --danger:   #e74c3c;
+      --radius:   12px;
+      --transition: 0.22s ease;
+    }
+
+    /* ── Reset ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: var(--navy);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    img, svg { display: block; }
+    ul { list-style: none; }
+
+    /* ── Three.js canvas ───────────────────────────────────── */
+    #three-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Noise overlay ─────────────────────────────────────── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ── Animations ────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fadeUp { animation: fadeUp 0.6s ease both; }
+    .fadeUp-1 { animation-delay: 0.1s; }
+    .fadeUp-2 { animation-delay: 0.2s; }
+    .fadeUp-3 { animation-delay: 0.3s; }
+    .fadeUp-4 { animation-delay: 0.4s; }
+    .fadeUp-5 { animation-delay: 0.5s; }
+
+    /* ── Shared components ─────────────────────────────────── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--electric);
+      color: var(--white);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.05rem;
+      letter-spacing: 0.1em;
+      padding: 0.75rem 1.8rem;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+      position: relative;
+      z-index: 1;
+    }
+    .btn-primary:hover {
+      background: #009e78;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,200,150,0.45);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: transparent;
+      color: var(--white);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.05rem;
+      letter-spacing: 0.1em;
+      padding: 0.75rem 1.8rem;
+      border-radius: var(--radius);
+      border: 1.5px solid rgba(244,247,255,0.3);
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition), transform var(--transition);
+      position: relative;
+      z-index: 1;
+    }
+    .btn-ghost:hover {
+      border-color: var(--electric);
+      background: var(--electric-dim);
+      transform: translateY(-2px);
+    }
+    .btn-ghost:active { transform: translateY(0); }
+
+    .card {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,150,0.2);
+      border-radius: var(--radius);
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+      transform-style: preserve-3d;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--electric), rgba(0,200,150,0.2));
+    }
+    .card:hover {
+      border-color: rgba(0,200,150,0.5);
+      transform: translateY(-6px) rotateX(2deg);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,200,150,0.15), 0 0 60px rgba(0,200,150,0.06);
+    }
+
+    /* ── Layout helpers ────────────────────────────────────── */
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ── Navigation ────────────────────────────────────────── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: rgba(5,13,26,0.75);
+      border-bottom: 1px solid rgba(0,200,150,0.1);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      padding: 0 1.25rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 0.1em;
+      color: var(--electric);
+      transition: opacity var(--transition), text-shadow var(--transition);
+    }
+    .nav-logo:hover {
+      opacity: 0.8;
+      text-shadow: 0 0 20px rgba(0,200,150,0.5);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+    .nav-links a {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--off);
+      transition: color var(--transition);
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-cta { margin-left: 0.5rem; }
+
+    /* ── Hero ──────────────────────────────────────────────── */
+    .hero {
+      padding: 6rem 0 5rem;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      min-height: 92vh;
+      display: flex;
+      align-items: center;
+    }
+    .hero .container { width: 100%; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--electric-dim);
+      border: 1px solid rgba(0,200,150,0.3);
+      border-radius: 100px;
+      padding: 0.4rem 1rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      color: var(--electric);
+      margin-bottom: 2rem;
+    }
+    .hero-badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--electric);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.8); }
+    }
+    .hero-heading {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3.5rem, 9vw, 6.5rem);
+      letter-spacing: 0.06em;
+      line-height: 1.0;
+      margin-bottom: 1.25rem;
+      background: linear-gradient(135deg, var(--white) 40%, var(--electric) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-heading span {
+      color: var(--electric);
+      -webkit-text-fill-color: var(--electric);
+      text-shadow: 0 0 40px rgba(0,200,150,0.4);
+    }
+    .hero-sub {
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      color: var(--off);
+      font-weight: 300;
+      max-width: 560px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.7;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 3rem;
+    }
+    .hero-scroll {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--off);
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      font-family: 'Space Mono', monospace;
+    }
+    .hero-scroll-arrow {
+      width: 20px; height: 20px;
+      border-right: 2px solid var(--electric);
+      border-bottom: 2px solid var(--electric);
+      transform: rotate(45deg);
+      animation: bounce 2s ease-in-out infinite;
+      opacity: 0.6;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: rotate(45deg) translateY(0); }
+      50%       { transform: rotate(45deg) translateY(4px); }
+    }
+
+    /* ── Section ───────────────────────────────────────────── */
+    .section {
+      padding: 5rem 0;
+      position: relative;
+      z-index: 2;
+    }
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      color: var(--electric);
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    .section-heading {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      letter-spacing: 0.06em;
+      line-height: 1.05;
+      margin-bottom: 1rem;
+    }
+    .section-sub {
+      color: var(--off);
+      font-weight: 300;
+      font-size: 1rem;
+      max-width: 600px;
+      margin-bottom: 0.5rem;
+      line-height: 1.7;
+    }
+    .features-header { margin-bottom: 1rem; }
+
+    /* ── Features ──────────────────────────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      filter: drop-shadow(0 0 8px rgba(0,200,150,0.4));
+    }
+    .feature-card {
+      background: rgba(10,22,40,0.7);
+      border: 1px solid rgba(0,200,150,0.15);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+      transform-style: preserve-3d;
+      backdrop-filter: blur(4px);
+    }
+    .feature-card:hover {
+      border-color: rgba(0,200,150,0.4);
+      transform: translateY(-5px) rotateX(3deg);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 50px rgba(0,200,150,0.04);
+      background: rgba(0,200,150,0.08);
+    }
+    .feature-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.08em;
+      color: var(--white);
+      margin-bottom: 0.5rem;
+    }
+    .feature-desc {
+      color: var(--off);
+      font-size: 0.95rem;
+      font-weight: 300;
+      line-height: 1.7;
+    }
+
+    /* ── Modes ─────────────────────────────────────────────── */
+    .modes-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .mode-card {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,150,0.15);
+      border-radius: var(--radius);
+      padding: 2rem;
+      position: relative;
+      transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+      transform-style: preserve-3d;
+    }
+    .mode-card:hover {
+      border-color: rgba(0,200,150,0.4);
+      transform: translateY(-5px) rotateY(2deg);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,200,150,0.05);
+    }
+    .mode-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--electric-dim);
+      border: 1px solid rgba(0,200,150,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .mode-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+    }
+    .mode-desc {
+      color: var(--off);
+      font-size: 0.92rem;
+      line-height: 1.7;
+      font-weight: 300;
+    }
+    .mode-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .mode-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.05em;
+      color: var(--electric);
+      background: var(--electric-dim);
+      border: 1px solid rgba(0,200,150,0.2);
+      border-radius: 100px;
+      padding: 0.2rem 0.7rem;
+    }
+
+    /* ── Pricing ───────────────────────────────────────────── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-top: 3rem;
+      max-width: 960px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .pricing-card {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,150,0.2);
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform var(--transition), box-shadow var(--transition);
+      transform-style: preserve-3d;
+    }
+    .pricing-card:hover {
+      transform: translateY(-6px) rotateX(2deg);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .pricing-card.featured {
+      border-color: var(--electric);
+      box-shadow: 0 0 0 1px var(--electric), 0 24px 60px rgba(0,200,150,0.2);
+    }
+    .pricing-card.featured::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--electric), #7fffda);
+    }
+    .pricing-pill {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: var(--electric);
+      color: var(--white);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.7rem;
+      border-radius: 100px;
+    }
+    .pricing-plan {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      color: var(--electric);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+    .pricing-price {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3.5rem;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+    .pricing-price sup {
+      font-size: 1.5rem;
+      vertical-align: super;
+      letter-spacing: 0;
+    }
+    .pricing-period {
+      color: var(--off);
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+    .pricing-divider {
+      height: 1px;
+      background: rgba(0,200,150,0.15);
+      margin: 1.5rem 0;
+    }
+    .pricing-features {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+    .pricing-feature {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.92rem;
+      color: var(--off);
+    }
+    .pricing-feature-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--electric-dim);
+      border: 1px solid rgba(0,200,150,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.65rem;
+      color: var(--electric);
+    }
+    .pricing-feature.active { color: var(--white); }
+    .pricing-card .btn-primary,
+    .pricing-card .btn-ghost {
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* ── Stats strip ───────────────────────────────────────── */
+    .stats-strip {
+      border-top: 1px solid rgba(0,200,150,0.1);
+      border-bottom: 1px solid rgba(0,200,150,0.1);
+      padding: 2.5rem 0;
+      background: rgba(10,22,40,0.6);
+      position: relative;
+      z-index: 2;
+      backdrop-filter: blur(8px);
+    }
+    .stats-inner {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+      align-items: center;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+    }
+    .stat-item { text-align: center; }
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem;
+      letter-spacing: 0.06em;
+      color: var(--electric);
+      line-height: 1;
+      text-shadow: 0 0 30px rgba(0,200,150,0.4);
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--off);
+      font-weight: 300;
+      margin-top: 0.25rem;
+    }
+
+    /* ── Steps ─────────────────────────────────────────────── */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.5rem;
+    }
+    .step-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--electric);
+      background: var(--electric-dim);
+      border: 1px solid rgba(0,200,150,0.3);
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      flex-shrink: 0;
+      letter-spacing: 0.05em;
+    }
+    .step-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.25rem;
+    }
+    .step-desc {
+      color: var(--off);
+      font-size: 0.9rem;
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    /* ── CTA banner ────────────────────────────────────────── */
+    .cta-banner {
+      background: linear-gradient(135deg, rgba(0,200,150,0.1), rgba(0,200,150,0.03));
+      border: 1px solid rgba(0,200,150,0.22);
+      border-radius: 20px;
+      padding: 4rem 2rem;
+      text-align: center;
+      margin: 5rem 0;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 80px rgba(0,200,150,0.05) inset;
+      backdrop-filter: blur(4px);
+    }
+    .cta-banner::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--electric), rgba(0,200,150,0.2));
+    }
+    .cta-banner-heading {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+    .cta-banner-sub {
+      color: var(--off);
+      font-weight: 300;
+      margin-bottom: 2rem;
+      font-size: 1.05rem;
+    }
+    .cta-banner-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    /* ── Footer ────────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid rgba(0,200,150,0.1);
+      padding: 2.5rem 0;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.1em;
+      color: var(--electric);
+      margin-bottom: 0.75rem;
+    }
+    .footer-copy {
+      color: var(--off);
+      font-size: 0.85rem;
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .footer-links a {
+      color: var(--off);
+      font-size: 0.85rem;
+      transition: color var(--transition);
+    }
+    .footer-links a:hover { color: var(--white); }
+
+    /* ── Nav hamburger ──────────────────────────────────────── */
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 4px;
+      background: none;
+      border: none;
+    }
+    .nav-hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--white);
+      border-radius: 2px;
+    }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (min-width: 768px) {
+      .features-grid { grid-template-columns: repeat(3, 1fr); }
+      .modes-grid { grid-template-columns: repeat(3, 1fr); }
+      .pricing-grid { grid-template-columns: repeat(3, 1fr); }
+      .steps { flex-direction: row; flex-wrap: wrap; }
+      .step { flex: 1 1 calc(50% - 1.5rem); }
+    }
+
+    @media (max-width: 767px) {
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 64px;
+        left: 0; right: 0;
+        background: rgba(5,13,26,0.98);
+        border-bottom: 1px solid rgba(0,200,150,0.15);
+        flex-direction: column;
+        padding: 1.5rem;
+        gap: 1.25rem;
+        z-index: 99;
+      }
+      .nav-links.open { display: flex; }
+      .nav-hamburger { display: flex; }
+      .nav { position: relative; }
+    }
+
+    @media (min-width: 1024px) {
+      .hero { padding: 8rem 0 6rem; }
+      .step { flex: 1 1 calc(25% - 1.5rem); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Three.js background canvas -->
+  <canvas id="three-canvas"></canvas>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">StudyGuy</a>
+      <div class="nav-links" id="navLinks">
+        <a href="#features">Features</a>
+        <a href="#modes">Modes</a>
+        <a href="#pricing">Pricing</a>
+        <a href="login.html?tab=signup" class="btn-primary nav-cta">Get started</a>
+      </div>
+      <button class="nav-hamburger" id="navHamburger" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge fadeUp">
+        <span class="hero-badge-dot"></span>
+        Free to start · No card required
+      </div>
+      <h1 class="hero-heading fadeUp fadeUp-1">
+        Your notes,<br /><span>revision-ready</span>
+      </h1>
+      <p class="hero-sub fadeUp fadeUp-2">
+        Upload your notes, slides, or textbook pages. Get back a clean study guide you can actually use — in minutes.
+      </p>
+      <div class="hero-actions fadeUp fadeUp-3">
+        <a href="login.html?tab=signup" class="btn-primary">Start for free</a>
+        <a href="#features" class="btn-ghost">See how it works</a>
+      </div>
+      <div class="hero-scroll fadeUp fadeUp-4">
+        <span>Scroll to explore</span>
+        <div class="hero-scroll-arrow"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats strip -->
+  <div class="stats-strip">
+    <div class="stats-inner">
+      <div class="stat-item">
+        <div class="stat-value">3</div>
+        <div class="stat-label">Free guides to start</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">3</div>
+        <div class="stat-label">Ways to study</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">Any</div>
+        <div class="stat-label">Subject or document type</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">PDF</div>
+        <div class="stat-label">Images and text supported</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="features-header">
+        <p class="section-label">What you get</p>
+        <h2 class="section-heading fadeUp">Built to help<br />you actually study.</h2>
+        <p class="section-sub fadeUp fadeUp-1">No filler, no reformatting. Just clean output from whatever you upload.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card fadeUp">
+          <div class="feature-icon">📄</div>
+          <div class="feature-title">Any document</div>
+          <p class="feature-desc">PDFs, images, scanned notes, slides, or raw text. StudyGuy handles all of it — even handwritten pages.</p>
+        </div>
+        <div class="feature-card fadeUp fadeUp-1">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-title">Ready in minutes</div>
+          <p class="feature-desc">Upload once and get a fully structured guide back fast. No editing, no copy-pasting, no manual work.</p>
+        </div>
+        <div class="feature-card fadeUp fadeUp-2">
+          <div class="feature-icon">📱</div>
+          <div class="feature-title">Study anywhere</div>
+          <p class="feature-desc">Every guide is saved to your account. Open it on your phone, tablet, or laptop whenever you need it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="section" style="padding-top:0;">
+    <div class="container">
+      <p class="section-label">How it works</p>
+      <h2 class="section-heading fadeUp">Four steps to your<br />study guide</h2>
+      <div class="steps">
+        <div class="step fadeUp">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <div class="step-title">Upload your document</div>
+            <p class="step-desc">Drop in any file — notes, slides, or a photo of your handwriting. Any subject works.</p>
+          </div>
+        </div>
+        <div class="step fadeUp fadeUp-1">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <div class="step-title">Pick your mode</div>
+            <p class="step-desc">Study guide for structured notes. Problem solver for worked solutions. Hybrid for both.</p>
+          </div>
+        </div>
+        <div class="step fadeUp fadeUp-2">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <div class="step-title">AI builds your guide</div>
+            <p class="step-desc">StudyGuy reads your document and turns it into a clean, structured guide. No input needed from you.</p>
+          </div>
+        </div>
+        <div class="step fadeUp fadeUp-3">
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <div class="step-title">Study from your guide</div>
+            <p class="step-desc">Your guide is saved to your account. Read it online any time, on any device.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modes -->
+  <section class="section" id="modes">
+    <div class="container">
+      <p class="section-label">Output modes</p>
+      <h2 class="section-heading fadeUp">Choose how<br />you want to study</h2>
+      <div class="modes-grid">
+        <div class="mode-card fadeUp">
+          <div class="mode-icon">📚</div>
+          <div class="mode-name">Study guide</div>
+          <p class="mode-desc">Your document becomes clean revision notes. Key ideas, definitions, and a summary — laid out so you can read straight through without sorting anything first.</p>
+          <div class="mode-tags">
+            <span class="mode-tag">Key concepts</span>
+            <span class="mode-tag">Definitions</span>
+            <span class="mode-tag">Summary</span>
+          </div>
+        </div>
+        <div class="mode-card fadeUp fadeUp-1">
+          <div class="mode-icon">🔬</div>
+          <div class="mode-name">Problem solver</div>
+          <p class="mode-desc">Every problem in your document gets worked through step by step. Great for maths, science, and any subject where the method matters as much as the answer.</p>
+          <div class="mode-tags">
+            <span class="mode-tag">Step-by-step</span>
+            <span class="mode-tag">Explanations</span>
+            <span class="mode-tag">Worked examples</span>
+          </div>
+        </div>
+        <div class="mode-card fadeUp fadeUp-2">
+          <div class="mode-icon">⚗️</div>
+          <div class="mode-name">Hybrid</div>
+          <p class="mode-desc">Concept notes and worked examples together. Understand the theory and see how it applies — all from a single upload.</p>
+          <div class="mode-tags">
+            <span class="mode-tag">Concepts</span>
+            <span class="mode-tag">Worked examples</span>
+            <span class="mode-tag">Practice problems</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="section" id="pricing">
+    <div class="container">
+      <p class="section-label" style="text-align:center;">Pricing</p>
+      <h2 class="section-heading fadeUp" style="text-align:center;">Simple pricing,<br />no surprises</h2>
+      <p class="section-sub fadeUp fadeUp-1" style="text-align:center; margin:0 auto 0;">Start free. No card needed. Upgrade any time.</p>
+      <div class="pricing-grid">
+        <div class="pricing-card fadeUp">
+          <p class="pricing-plan">Free</p>
+          <div class="pricing-price"><sup>$</sup>0</div>
+          <p class="pricing-period">No credit card required</p>
+          <div class="pricing-divider"></div>
+          <ul class="pricing-features">
+            <li class="pricing-feature active">
+              <span class="pricing-feature-check">✓</span>
+              3 study guides to get started
+            </li>
+            <li class="pricing-feature active">
+              <span class="pricing-feature-check">✓</span>
+              All three output modes
+            </li>
+            <li class="pricing-feature active">
+              <span class="pricing-feature-check">✓</span>
+              PDF, image, and text support
+            </li>
+            <li class="pricing-feature">
+              <span class="pricing-feature-check" style="opacity:0.3;">–</span>
+              Unlimited study guides
+            </li>
+          </ul>
+          <a href="login.html?tab=signup" class="btn-ghost">Get started free</a>
+        </div>
+        <div class="pricing-card featured fadeUp fadeUp-1">
+          <span class="pricing-pill">Most popular</span>
+          <p class="pricing-plan">Pro</p>
+          <div class="pricing-price"><sup>$</sup>10</div>
+          <p class="pricing-period">per month, cancel anytime</p>
+          <div class="pricing-divider"></div>
+          <ul class="pricing-features">
+            <li class="pricing-feature active">
+              <span class="pricing-feature-check">✓</span>
+              Unlimited study guides
+            </li>
+            <li class="pricing-feature active">
+              <span class="pricing-feature-check">✓</span>
+              All three output modes
+            </li>
+            <li class="pricing-feature active">
+              <span class="pricing-feature-check">✓</span>
+              PDF, image, and text support
+            </li>
+            <li class="pricing-feature active">
+              <span class="pricing-feature-check">✓</span>
+              Up to 10 MB per file
+            </li>
+          </ul>
+          <a href="login.html" class="btn-primary">Get started — $10/mo</a>
+        </div>
+        <div class="pricing-card fadeUp fadeUp-2">
+          <p class="pricing-plan">Ultra</p>
+          <div class="pricing-price"><sup>$</sup>20</div>
+          <p class="pricing-period">per month, cancel anytime</p>
+          <div class="pricing-divider"></div>
+          <ul class="pricing-features">
+            <li class="pricing-feature active">
+              <span class="pricing-feature-check">✓</span>
+              Unlimited study guides
+            </li>
+            <li class="pricing-feature active">
+              <span class="pricing-feature-check">✓</span>
+              All three output modes
+            </li>
+            <li class="pricing-feature active">
+              <span class="pricing-feature-check">✓</span>
+              PDF, image, and text support
+            </li>
+            <li class="pricing-feature active">
+              <span class="pricing-feature-check">✓</span>
+              Up to 20 MB per file
+            </li>
+          </ul>
+          <a href="login.html" class="btn-primary">Get started — $20/mo</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <div class="container">
+    <div class="cta-banner fadeUp">
+      <h2 class="cta-banner-heading">Start revising smarter today</h2>
+      <p class="cta-banner-sub">Free to try. No card required. Your first three guides are on us.</p>
+      <div class="cta-banner-actions">
+        <a href="login.html?tab=signup" class="btn-primary">Create free account</a>
+        <a href="#features" class="btn-ghost">Learn more</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-logo">StudyGuy</div>
+      <p class="footer-copy">© 2026 StudyGuy. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="privacy.html">Privacy policy</a>
+        <a href="terms.html">Terms of service</a>
+        <a href="login.html">Sign in</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* ── Three.js scene ─────────────────────────────────────── */
+    (function () {
+      const canvas = document.getElementById('three-canvas');
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setClearColor(0x050d1a, 1);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
+      camera.position.z = 50;
+
+      // ── Particle field
+      const particleCount = 1800;
+      const positions = new Float32Array(particleCount * 3);
+      const sizes     = new Float32Array(particleCount);
+      for (let i = 0; i < particleCount; i++) {
+        positions[i * 3]     = (Math.random() - 0.5) * 140;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 140;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 80;
+        sizes[i] = Math.random() * 1.8 + 0.3;
+      }
+      const pgeo = new THREE.BufferGeometry();
+      pgeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      pgeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+      const pmat = new THREE.PointsMaterial({
+        color: 0x00c896,
+        size: 0.18,
+        transparent: true,
+        opacity: 0.55,
+        sizeAttenuation: true,
+      });
+      scene.add(new THREE.Points(pgeo, pmat));
+
+      // ── Floating geometric objects
+      const elCol = 0x00c896;
+      const objects = [];
+
+      function addObj(geo, x, y, z, rx, ry) {
+        const mat = new THREE.MeshPhongMaterial({
+          color: elCol,
+          transparent: true,
+          opacity: 0.08,
+          wireframe: false,
+          emissive: 0x00c896,
+          emissiveIntensity: 0.1,
+        });
+        const wmat = new THREE.MeshBasicMaterial({
+          color: elCol,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.22,
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        const wire = new THREE.Mesh(geo, wmat);
+        const group = new THREE.Group();
+        group.add(mesh);
+        group.add(wire);
+        group.position.set(x, y, z);
+        group.rotation.set(rx, ry, 0);
+        scene.add(group);
+        objects.push(group);
+        return group;
+      }
+
+      addObj(new THREE.IcosahedronGeometry(5, 0),  -28, 12, -20, 0.3, 0.5);
+      addObj(new THREE.OctahedronGeometry(4, 0),    26, -8, -18, 0.2, 0.8);
+      addObj(new THREE.TetrahedronGeometry(3.5, 0), -18, -14, -10, 0.5, 0.3);
+      addObj(new THREE.IcosahedronGeometry(3, 0),   20, 16, -15, 0.4, 0.6);
+      addObj(new THREE.OctahedronGeometry(2.5, 0),  -8, -18, -12, 0.1, 0.9);
+      addObj(new THREE.TetrahedronGeometry(2.2, 0),  10, 8, -8,  0.7, 0.2);
+
+      // ── Ambient + directional light
+      scene.add(new THREE.AmbientLight(0x00c896, 0.3));
+      const dlight = new THREE.DirectionalLight(0x00ffc8, 0.8);
+      dlight.position.set(10, 20, 15);
+      scene.add(dlight);
+
+      // ── Connection lines between nearby particles
+      const lineMat = new THREE.LineBasicMaterial({
+        color: 0x00c896,
+        transparent: true,
+        opacity: 0.06,
+      });
+      const lineGeo = new THREE.BufferGeometry();
+      const linePositions = [];
+      const maxDist = 14;
+      const ppos = pgeo.attributes.position.array;
+      for (let i = 0; i < Math.min(particleCount, 400); i++) {
+        for (let j = i + 1; j < Math.min(particleCount, 400); j++) {
+          const dx = ppos[i*3] - ppos[j*3];
+          const dy = ppos[i*3+1] - ppos[j*3+1];
+          const dz = ppos[i*3+2] - ppos[j*3+2];
+          if (Math.sqrt(dx*dx + dy*dy + dz*dz) < maxDist) {
+            linePositions.push(ppos[i*3], ppos[i*3+1], ppos[i*3+2]);
+            linePositions.push(ppos[j*3], ppos[j*3+1], ppos[j*3+2]);
+          }
+        }
+      }
+      lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+      scene.add(new THREE.LineSegments(lineGeo, lineMat));
+
+      // ── Resize
+      function onResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+      window.addEventListener('resize', onResize);
+      onResize();
+
+      // ── Mouse parallax
+      let mx = 0, my = 0;
+      window.addEventListener('mousemove', e => {
+        mx = (e.clientX / window.innerWidth  - 0.5) * 2;
+        my = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+
+      // ── Scroll parallax
+      let scrollY = 0;
+      window.addEventListener('scroll', () => { scrollY = window.scrollY; });
+
+      // ── Animate
+      const clock = new THREE.Clock();
+      function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+
+        // Slow particle field drift
+        pmat.opacity = 0.4 + Math.sin(t * 0.3) * 0.1;
+        pgeo.attributes.position.array.forEach((v, i) => {
+          if (i % 3 === 1) pgeo.attributes.position.array[i] += 0.003;
+        });
+        pgeo.attributes.position.needsUpdate = true;
+
+        // Camera parallax on mouse + scroll
+        camera.position.x += (mx * 4 - camera.position.x) * 0.03;
+        camera.position.y += (-my * 3 - camera.position.y + scrollY * 0.015) * 0.03;
+        camera.lookAt(0, 0, 0);
+
+        // Rotate geometric objects
+        objects.forEach((obj, i) => {
+          const speed = 0.12 + i * 0.04;
+          obj.rotation.x += 0.003 * speed;
+          obj.rotation.y += 0.005 * speed;
+          obj.position.y += Math.sin(t * 0.4 + i) * 0.006;
+        });
+
+        renderer.render(scene, camera);
+      }
+      animate();
+    })();
+
+    /* ── Mobile nav toggle ──────────────────────────────────── */
+    const hamburger = document.getElementById('navHamburger');
+    const navLinks  = document.getElementById('navLinks');
+    hamburger.addEventListener('click', () => navLinks.classList.toggle('open'));
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => navLinks.classList.remove('open'));
+    });
+
+    /* ── Scroll-triggered fadeUp animations ─────────────────── */
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.fadeUp').forEach(el => {
+      if (!el.closest('.hero')) {
+        el.style.animationPlayState = 'paused';
+        observer.observe(el);
+      }
+    });
+  </script>
+</body>
+</html>
