@@ -1012,108 +1012,77 @@
   </footer>
 
   <script>
-    /* ── Three.js scene ─────────────────────────────────────── */
+    /* ── Three.js scene (index.html — more particles than inner pages) ── */
     (function () {
-      const canvas = document.getElementById('three-canvas');
+      const canvas   = document.getElementById('three-canvas');
       const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setClearColor(0x050d1a, 1);
 
-      const scene = new THREE.Scene();
+      const scene  = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
-      camera.position.z = 50;
+      camera.position.set(0, 0, 50);
 
-      // ── Particle field
+      /* ── Particles with per-particle speeds ── */
       const particleCount = 1800;
-      const positions = new Float32Array(particleCount * 3);
-      const sizes     = new Float32Array(particleCount);
+      const positions  = new Float32Array(particleCount * 3);
+      const velocities = new Float32Array(particleCount);
       for (let i = 0; i < particleCount; i++) {
-        positions[i * 3]     = (Math.random() - 0.5) * 140;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 140;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 80;
-        sizes[i] = Math.random() * 1.8 + 0.3;
+        positions[i*3]     = (Math.random() - 0.5) * 140;
+        positions[i*3 + 1] = (Math.random() - 0.5) * 140;
+        positions[i*3 + 2] = (Math.random() - 0.5) * 80;
+        velocities[i]      = 0.002 + Math.random() * 0.004;
       }
       const pgeo = new THREE.BufferGeometry();
       pgeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      pgeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-      const pmat = new THREE.PointsMaterial({
-        color: 0x00c896,
-        size: 0.18,
-        transparent: true,
-        opacity: 0.55,
-        sizeAttenuation: true,
-      });
+      const pmat = new THREE.PointsMaterial({ color: 0x00c896, size: 0.18, transparent: true, opacity: 0.55, sizeAttenuation: true });
       scene.add(new THREE.Points(pgeo, pmat));
 
-      // ── Floating geometric objects
-      const elCol = 0x00c896;
+      /* ── Floating wireframe geometry ── */
       const objects = [];
-
       function addObj(geo, x, y, z, rx, ry) {
-        const mat = new THREE.MeshPhongMaterial({
-          color: elCol,
-          transparent: true,
-          opacity: 0.08,
-          wireframe: false,
-          emissive: 0x00c896,
-          emissiveIntensity: 0.1,
-        });
-        const wmat = new THREE.MeshBasicMaterial({
-          color: elCol,
-          wireframe: true,
-          transparent: true,
-          opacity: 0.22,
-        });
-        const mesh = new THREE.Mesh(geo, mat);
-        const wire = new THREE.Mesh(geo, wmat);
-        const group = new THREE.Group();
-        group.add(mesh);
-        group.add(wire);
-        group.position.set(x, y, z);
-        group.rotation.set(rx, ry, 0);
-        scene.add(group);
-        objects.push(group);
-        return group;
+        const fmat = new THREE.MeshPhongMaterial({ color: 0x00c896, transparent: true, opacity: 0.08, emissive: 0x00c896, emissiveIntensity: 0.1 });
+        const wmat = new THREE.MeshBasicMaterial({ color: 0x00c896, wireframe: true, transparent: true, opacity: 0.22 });
+        const grp  = new THREE.Group();
+        grp.add(new THREE.Mesh(geo, fmat));
+        grp.add(new THREE.Mesh(geo, wmat));
+        grp.position.set(x, y, z);
+        grp.rotation.set(rx, ry, 0);
+        scene.add(grp);
+        objects.push(grp);
       }
-
       addObj(new THREE.IcosahedronGeometry(5, 0),  -28, 12, -20, 0.3, 0.5);
       addObj(new THREE.OctahedronGeometry(4, 0),    26, -8, -18, 0.2, 0.8);
       addObj(new THREE.TetrahedronGeometry(3.5, 0), -18, -14, -10, 0.5, 0.3);
       addObj(new THREE.IcosahedronGeometry(3, 0),   20, 16, -15, 0.4, 0.6);
       addObj(new THREE.OctahedronGeometry(2.5, 0),  -8, -18, -12, 0.1, 0.9);
-      addObj(new THREE.TetrahedronGeometry(2.2, 0),  10, 8, -8,  0.7, 0.2);
+      addObj(new THREE.TetrahedronGeometry(2.2, 0),  10,  8,  -8, 0.7, 0.2);
 
-      // ── Ambient + directional light
+      /* ── Lights ── */
       scene.add(new THREE.AmbientLight(0x00c896, 0.3));
       const dlight = new THREE.DirectionalLight(0x00ffc8, 0.8);
       dlight.position.set(10, 20, 15);
       scene.add(dlight);
 
-      // ── Connection lines between nearby particles
-      const lineMat = new THREE.LineBasicMaterial({
-        color: 0x00c896,
-        transparent: true,
-        opacity: 0.06,
-      });
+      /* ── Connection lines (static, built once) ── */
+      const lineMat = new THREE.LineBasicMaterial({ color: 0x00c896, transparent: true, opacity: 0.06 });
       const lineGeo = new THREE.BufferGeometry();
-      const linePositions = [];
-      const maxDist = 14;
-      const ppos = pgeo.attributes.position.array;
+      const linePts = [];
       for (let i = 0; i < Math.min(particleCount, 400); i++) {
         for (let j = i + 1; j < Math.min(particleCount, 400); j++) {
-          const dx = ppos[i*3] - ppos[j*3];
-          const dy = ppos[i*3+1] - ppos[j*3+1];
-          const dz = ppos[i*3+2] - ppos[j*3+2];
-          if (Math.sqrt(dx*dx + dy*dy + dz*dz) < maxDist) {
-            linePositions.push(ppos[i*3], ppos[i*3+1], ppos[i*3+2]);
-            linePositions.push(ppos[j*3], ppos[j*3+1], ppos[j*3+2]);
+          const dx = positions[i*3] - positions[j*3];
+          const dy = positions[i*3+1] - positions[j*3+1];
+          const dz = positions[i*3+2] - positions[j*3+2];
+          if (Math.sqrt(dx*dx + dy*dy + dz*dz) < 14) {
+            linePts.push(positions[i*3], positions[i*3+1], positions[i*3+2]);
+            linePts.push(positions[j*3], positions[j*3+1], positions[j*3+2]);
           }
         }
       }
-      lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+      lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePts, 3));
       scene.add(new THREE.LineSegments(lineGeo, lineMat));
 
-      // ── Resize
+      /* ── Resize ── */
       function onResize() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -1122,41 +1091,74 @@
       window.addEventListener('resize', onResize);
       onResize();
 
-      // ── Mouse parallax
-      let mx = 0, my = 0;
+      /* ── Input — mouse and scroll separated ── */
+      let targetX = 0, targetY = 0, currentX = 0, currentY = 0;
+      let scrollTarget = 0, scrollCurrent = 0;
       window.addEventListener('mousemove', e => {
-        mx = (e.clientX / window.innerWidth  - 0.5) * 2;
-        my = (e.clientY / window.innerHeight - 0.5) * 2;
+        targetX = (e.clientX / window.innerWidth  - 0.5) * 8;
+        targetY = (e.clientY / window.innerHeight - 0.5) * -5;
+      });
+      window.addEventListener('scroll', () => {
+        scrollTarget = window.scrollY * 0.0008;
       });
 
-      // ── Scroll parallax
-      let scrollY = 0;
-      window.addEventListener('scroll', () => { scrollY = window.scrollY; });
+      /* ── Tab visibility — prevent clock jump, play wake animation ── */
+      let wakeBoost = 0, wakePulse = 0, lastTime = performance.now();
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          lastTime  = performance.now(); // reset so delta doesn't spike
+          wakeBoost = 1.0;
+          wakePulse = 1.0;
+        }
+      });
 
-      // ── Animate
-      const clock = new THREE.Clock();
+      /* ── Animate ── */
+      let elapsed = 0;
+      const MAX_DELTA = 0.05;
+
       function animate() {
         requestAnimationFrame(animate);
-        const t = clock.getElapsedTime();
+        const now   = performance.now();
+        const delta = Math.min((now - lastTime) / 1000, MAX_DELTA);
+        lastTime    = now;
+        elapsed    += delta;
 
-        // Slow particle field drift
-        pmat.opacity = 0.4 + Math.sin(t * 0.3) * 0.1;
-        pgeo.attributes.position.array.forEach((v, i) => {
-          if (i % 3 === 1) pgeo.attributes.position.array[i] += 0.003;
-        });
+        wakeBoost = Math.max(0, wakeBoost - delta * 1.2);
+        wakePulse = Math.max(0, wakePulse - delta * 0.8);
+
+        /* Particle opacity breathes; pulses on tab return */
+        pmat.opacity = 0.45 + Math.sin(elapsed * 0.3) * 0.08 + wakePulse * 0.3;
+
+        /* Per-particle drift with smooth position wrap */
+        const pa = pgeo.attributes.position.array;
+        for (let k = 0; k < particleCount; k++) {
+          pa[k*3 + 1] += velocities[k];
+          if (pa[k*3 + 1] > 70) {
+            pa[k*3 + 1]  = -70;
+            pa[k*3]      = (Math.random() - 0.5) * 140;
+            pa[k*3 + 2]  = (Math.random() - 0.5) * 80;
+          }
+        }
         pgeo.attributes.position.needsUpdate = true;
 
-        // Camera parallax on mouse + scroll
-        camera.position.x += (mx * 4 - camera.position.x) * 0.03;
-        camera.position.y += (-my * 3 - camera.position.y + scrollY * 0.015) * 0.03;
+        /* Camera — mouse parallax only, no scroll mixed in */
+        currentX += (targetX - currentX) * 0.04;
+        currentY += (targetY - currentY) * 0.04;
+        camera.position.set(currentX, currentY, 50);
         camera.lookAt(0, 0, 0);
 
-        // Rotate geometric objects
+        /* Scene rotation from scroll — keeps geometry visible at all scroll depths */
+        scrollCurrent += (scrollTarget - scrollCurrent) * 0.05;
+        scene.rotation.x = scrollCurrent * 0.3;
+        scene.rotation.y = scrollCurrent * 0.15;
+
+        /* Object rotation — speed burst on tab return */
+        const boostMult = 1 + wakeBoost * 4;
         objects.forEach((obj, i) => {
-          const speed = 0.12 + i * 0.04;
-          obj.rotation.x += 0.003 * speed;
-          obj.rotation.y += 0.005 * speed;
-          obj.position.y += Math.sin(t * 0.4 + i) * 0.006;
+          const spd = (0.12 + i * 0.04) * boostMult;
+          obj.rotation.x += delta * 0.3 * spd;
+          obj.rotation.y += delta * 0.5 * spd;
+          obj.position.y += Math.sin(elapsed * 0.4 + i) * 0.005;
         });
 
         renderer.render(scene, camera);

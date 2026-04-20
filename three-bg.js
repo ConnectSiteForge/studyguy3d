@@ -1,5 +1,5 @@
-/* three-bg.js — shared Three.js scene for all StudyGuy 3D pages
-   Requires: Three.js r134 already loaded, <canvas id="three-canvas"> in the DOM */
+/* three-bg.js — shared Three.js scene, all StudyGuy 3D pages
+   Requires: Three.js r134 already loaded, <canvas id="three-canvas"> in DOM */
 (function () {
   var canvas = document.getElementById('three-canvas');
   if (!canvas || typeof THREE === 'undefined') return;
@@ -10,20 +10,23 @@
 
   var scene  = new THREE.Scene();
   var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
-  camera.position.z = 50;
+  camera.position.set(0, 0, 50);
 
   /* ── Particle field ─────────────────────────────────── */
   var particleCount = 1400;
-  var positions = new Float32Array(particleCount * 3);
+  var positions  = new Float32Array(particleCount * 3);
+  var velocities = new Float32Array(particleCount); // per-particle y drift speed
   for (var i = 0; i < particleCount; i++) {
     positions[i * 3]     = (Math.random() - 0.5) * 130;
     positions[i * 3 + 1] = (Math.random() - 0.5) * 130;
     positions[i * 3 + 2] = (Math.random() - 0.5) * 70;
+    velocities[i] = 0.002 + Math.random() * 0.004; // varied drift speeds
   }
   var pgeo = new THREE.BufferGeometry();
   pgeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   var pmat = new THREE.PointsMaterial({ color: 0x00c896, size: 0.15, transparent: true, opacity: 0.5, sizeAttenuation: true });
-  scene.add(new THREE.Points(pgeo, pmat));
+  var particles = new THREE.Points(pgeo, pmat);
+  scene.add(particles);
 
   /* ── Connection lines ───────────────────────────────── */
   var lineMat = new THREE.LineBasicMaterial({ color: 0x00c896, transparent: true, opacity: 0.05 });
@@ -59,7 +62,7 @@
   }
   addObj(new THREE.IcosahedronGeometry(4.5, 0),  -26, 11, -18);
   addObj(new THREE.OctahedronGeometry(3.5, 0),    24, -7, -16);
-  addObj(new THREE.TetrahedronGeometry(3, 0),     -16, -13, -9);
+  addObj(new THREE.TetrahedronGeometry(3, 0),    -16, -13, -9);
   addObj(new THREE.IcosahedronGeometry(2.8, 0),   18, 15, -14);
   addObj(new THREE.OctahedronGeometry(2.2, 0),    -7, -17, -11);
 
@@ -78,39 +81,89 @@
   window.addEventListener('resize', onResize);
   onResize();
 
-  /* ── Mouse + scroll parallax ────────────────────────── */
-  var mx = 0, my = 0, scrollY = 0;
+  /* ── Input tracking — mouse and scroll separated ────── */
+  var targetX = 0, targetY = 0;   // mouse parallax targets
+  var currentX = 0, currentY = 0; // smoothed camera offset
+  var scrollTarget = 0;           // scene rotation from scroll (not camera Y)
+  var scrollCurrent = 0;
+
   window.addEventListener('mousemove', function(e) {
-    mx = (e.clientX / window.innerWidth  - 0.5) * 2;
-    my = (e.clientY / window.innerHeight - 0.5) * 2;
+    targetX = (e.clientX / window.innerWidth  - 0.5) * 6;
+    targetY = (e.clientY / window.innerHeight - 0.5) * -4;
   });
-  window.addEventListener('scroll', function() { scrollY = window.scrollY; });
+
+  window.addEventListener('scroll', function() {
+    // Rotate the whole scene group slightly on scroll instead of moving camera
+    scrollTarget = window.scrollY * 0.0008;
+  });
+
+  /* ── Tab visibility — prevent clock jump and play wake animation ─ */
+  var wakeBoost = 0;      // extra rotation speed burst on tab return
+  var wakePulse = 0;      // particle opacity pulse on tab return
+
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+      // Tab just became visible — reset elapsed to avoid huge delta
+      lastTime = performance.now();
+      // Trigger wake animation
+      wakeBoost = 1.0;
+      wakePulse = 1.0;
+    }
+  });
 
   /* ── Animate ────────────────────────────────────────── */
-  var clock = new THREE.Clock();
+  var lastTime = performance.now();
+  var elapsed  = 0;
+  var MAX_DELTA = 0.05; // cap frame delta to 50ms to prevent jump after tab switch
+
   function animate() {
     requestAnimationFrame(animate);
-    var t = clock.getElapsedTime();
 
-    /* slow particle drift upward — wrap when off screen */
+    var now   = performance.now();
+    var delta = Math.min((now - lastTime) / 1000, MAX_DELTA); // seconds, capped
+    lastTime  = now;
+    elapsed  += delta;
+
+    /* Decay wake boost */
+    wakeBoost = Math.max(0, wakeBoost - delta * 1.2);
+    wakePulse = Math.max(0, wakePulse - delta * 0.8);
+
+    /* Particle opacity: normal 0.5, pulses to 0.85 on tab return */
+    pmat.opacity = 0.5 + wakePulse * 0.35;
+
+    /* Particle drift — per-particle speed, smooth wrapping */
     var pa = pgeo.attributes.position.array;
-    for (var k = 1; k < pa.length; k += 3) {
-      pa[k] += 0.003;
-      if (pa[k] > 65) pa[k] = -65;
+    for (var k = 0; k < particleCount; k++) {
+      pa[k*3 + 1] += velocities[k];
+      if (pa[k*3 + 1] > 65) {
+        pa[k*3 + 1] = -65;
+        // randomise x/z on wrap so it doesn't look like a teleport
+        pa[k*3]     = (Math.random() - 0.5) * 130;
+        pa[k*3 + 2] = (Math.random() - 0.5) * 70;
+      }
     }
     pgeo.attributes.position.needsUpdate = true;
 
-    /* camera parallax */
-    camera.position.x += (mx * 3.5 - camera.position.x) * 0.03;
-    camera.position.y += (-my * 2.5 - camera.position.y + scrollY * 0.012) * 0.03;
+    /* Smooth camera mouse parallax — independent of scroll */
+    currentX += (targetX - currentX) * 0.04;
+    currentY += (targetY - currentY) * 0.04;
+    camera.position.x = currentX;
+    camera.position.y = currentY;
+    camera.position.z = 50;
     camera.lookAt(0, 0, 0);
 
-    /* rotate objects */
+    /* Smooth scene rotation from scroll */
+    scrollCurrent += (scrollTarget - scrollCurrent) * 0.05;
+    scene.rotation.x = scrollCurrent * 0.3;
+    scene.rotation.y = scrollCurrent * 0.15;
+
+    /* Rotate geometric objects — faster on wake boost */
+    var boostMult = 1 + wakeBoost * 4;
     for (var j = 0; j < objects.length; j++) {
-      var spd = 0.12 + j * 0.04;
-      objects[j].rotation.x += 0.003 * spd;
-      objects[j].rotation.y += 0.005 * spd;
-      objects[j].position.y += Math.sin(t * 0.4 + j) * 0.005;
+      var spd = (0.12 + j * 0.04) * boostMult;
+      objects[j].rotation.x += delta * 0.3 * spd;
+      objects[j].rotation.y += delta * 0.5 * spd;
+      objects[j].position.y += Math.sin(elapsed * 0.4 + j) * 0.005;
     }
 
     renderer.render(scene, camera);
