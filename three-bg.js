@@ -88,8 +88,8 @@
   var scrollCurrent = 0;
 
   window.addEventListener('mousemove', function(e) {
-    targetX = (e.clientX / window.innerWidth  - 0.5) * 6;
-    targetY = (e.clientY / window.innerHeight - 0.5) * -4;
+    targetX = (e.clientX / window.innerWidth  - 0.5) * 2.5;
+    targetY = (e.clientY / window.innerHeight - 0.5) * -1.8;
   });
 
   window.addEventListener('scroll', function() {
@@ -145,8 +145,8 @@
     pgeo.attributes.position.needsUpdate = true;
 
     /* Smooth camera mouse parallax — independent of scroll */
-    currentX += (targetX - currentX) * 0.04;
-    currentY += (targetY - currentY) * 0.04;
+    currentX += (targetX - currentX) * 0.025;
+    currentY += (targetY - currentY) * 0.025;
     camera.position.x = currentX;
     camera.position.y = currentY;
     camera.position.z = 50;

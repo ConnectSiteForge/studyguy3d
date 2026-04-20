@@ -1095,8 +1095,8 @@
       let targetX = 0, targetY = 0, currentX = 0, currentY = 0;
       let scrollTarget = 0, scrollCurrent = 0;
       window.addEventListener('mousemove', e => {
-        targetX = (e.clientX / window.innerWidth  - 0.5) * 8;
-        targetY = (e.clientY / window.innerHeight - 0.5) * -5;
+        targetX = (e.clientX / window.innerWidth  - 0.5) * 3;
+        targetY = (e.clientY / window.innerHeight - 0.5) * -2;
       });
       window.addEventListener('scroll', () => {
         scrollTarget = window.scrollY * 0.0008;
@@ -1142,8 +1142,8 @@
         pgeo.attributes.position.needsUpdate = true;
 
         /* Camera — mouse parallax only, no scroll mixed in */
-        currentX += (targetX - currentX) * 0.04;
-        currentY += (targetY - currentY) * 0.04;
+        currentX += (targetX - currentX) * 0.025;
+        currentY += (targetY - currentY) * 0.025;
         camera.position.set(currentX, currentY, 50);
         camera.lookAt(0, 0, 0);
 
@@ -1191,5 +1191,6 @@
       }
     });
   </script>
+  <script src="transitions.js"></script>
 </body>
 </html>

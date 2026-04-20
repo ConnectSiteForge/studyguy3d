@@ -27,3 +27,13 @@
 ## 2026-04-19 — Tab visibility handled with performance.now() + MAX_DELTA cap
 **Decision:** Use performance.now() for manual delta timing. On visibilitychange (tab shown), reset lastTime. Cap MAX_DELTA at 0.05s. On return, fire wakeBoost (4× rotation speed) and wakePulse (opacity flash) for ~1s.
 **Rationale:** THREE.Clock accumulates elapsed time while the tab is hidden. On return, getElapsedTime() gives a huge delta (seconds), causing all objects to teleport. Manual reset prevents this entirely. The wake animation makes the tab-return feel intentional and alive rather than a glitch.
+
+## 2026-04-20 — Mouse parallax range reduced, lerp slowed
+**Decision:** targetX/Y range reduced from ±8/±5 to ±3/±2. Lerp factor slowed from 0.04 to 0.025.
+**Rationale:** Wide range caused visible camera jump when mouse moved quickly across the screen — especially jarring at screen edges. Smaller range keeps the parallax subtle and fluid without losing the 3D depth effect.
+**Implication:** Values apply in both three-bg.js (inner pages) and the inline scene in index.html — must be kept in sync if changed.
+
+## 2026-04-20 — Page transition overlay (transitions.js)
+**Decision:** Shared transitions.js injects a navy `#sg-transition` overlay at z-index 9999. On load it fades out (opacity 1→0 over 0.45s). On internal link click it fades in (0→1), waits 460ms, then navigates.
+**Rationale:** Hard page cuts are jarring against the continuous 3D scene. A smooth navy fade feels like the scene is transitioning between spaces, not reloading. 460ms delay matches the CSS transition duration exactly.
+**Implication:** Transitions.js skips external links, hash anchors, mailto/tel, and target=_blank links. Supabase auth redirects (window.location.href = ...) are unaffected since they bypass the click handler.
