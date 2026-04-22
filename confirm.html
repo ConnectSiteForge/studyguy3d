@@ -216,7 +216,7 @@
         <p class="state-sub">Your account is confirmed. You'll be redirected to your dashboard shortly.</p>
         <div class="countdown" id="countdownText">Redirecting in 5 seconds…</div>
         <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-        <a href="account.html" class="btn-primary">Go to dashboard now</a>
+        <a href="/#/account" class="btn-primary">Go to dashboard now</a>
       </div>
 
       <!-- Reset password form -->
@@ -237,14 +237,15 @@
         <div class="error-icon">✕</div>
         <h1 class="state-heading">Verification failed</h1>
         <p class="state-sub" id="errorMessage">The link may have expired or already been used. Please try signing up or signing in again.</p>
-        <a href="login.html" class="btn-primary">Back to sign in</a>
+        <a href="/#/login" class="btn-primary">Back to sign in</a>
         <br />
-        <a href="login.html" class="btn-ghost">Create new account</a>
+        <a href="/#/login" class="btn-ghost">Create new account</a>
       </div>
 
     </div>
   </main>
 
+  <script src="transitions.js"></script>
   <script src="three-bg.js"></script>
   <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -284,7 +285,7 @@
         countdownEl.textContent = 'Redirecting in ' + seconds + ' second' + (seconds !== 1 ? 's' : '') + '…';
         if (seconds <= 0) {
           clearInterval(interval);
-          window.location.href = 'account.html';
+          window.location.href = '/#/account';
         }
       }, 1000);
     }
@@ -339,7 +340,7 @@
           if (pw.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
           sf.auth.updateUser({ password: pw }).then(function(res) {
             if (res.error) { errEl.textContent = res.error.message; errEl.style.display = 'block'; }
-            else { window.location.href = 'login.html'; }
+            else { window.location.href = '/#/login'; }
           });
         });
       }

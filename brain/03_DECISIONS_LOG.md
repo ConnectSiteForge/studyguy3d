@@ -33,6 +33,16 @@
 **Rationale:** Wide range caused visible camera jump when mouse moved quickly across the screen — especially jarring at screen edges. Smaller range keeps the parallax subtle and fluid without losing the 3D depth effect.
 **Implication:** Values apply in both three-bg.js (inner pages) and the inline scene in index.html — must be kept in sync if changed.
 
+## 2026-04-21 — Convert to SPA with persistent Three.js scene
+**Decision:** Replace multi-page architecture with a single-page app (hash routing). index.html is the only entry point. sg-scene.js holds a persistent WebGL scene; sg-app.js is the hash router + view controllers. three-bg.js and transitions.js removed.
+**Rationale:** Multi-page architecture reinitialised Three.js on every navigation — making true 3D transitions between pages impossible. A persistent canvas + camera lerp between named modes gives effortless, seamless 3D transitions. Inspired by the stdyguy3d2 3-file build.
+**Implication:** confirm.html stays as a separate page (Supabase email links hardcode its URL at signup time). Legacy HTML pages (login.html, account.html, etc.) remain in repo but are superseded by the SPA views.
+
+## 2026-04-21 — School-themed 3D scene modes
+**Decision:** Three scene groups (desk, ID card, classroom) coexist in WebGL. Camera lerps between positions per mode. Opacity fades control which group is visible.
+**Rationale:** Each "area" of the app (marketing, auth, app) gets a distinct 3D environment. All objects pre-built at init time — no geometry creation during transitions.
+**Implication:** All Three.js objects must be added to the scene at startup. Adding a new mode requires adding objects and a MODES entry in sg-scene.js.
+
 ## 2026-04-20 — Page transition overlay (transitions.js)
 **Decision:** Shared transitions.js injects a navy `#sg-transition` overlay at z-index 9999. On load it fades out (opacity 1→0 over 0.45s). On internal link click it fades in (0→1), waits 460ms, then navigates.
 **Rationale:** Hard page cuts are jarring against the continuous 3D scene. A smooth navy fade feels like the scene is transitioning between spaces, not reloading. 460ms delay matches the CSS transition duration exactly.
